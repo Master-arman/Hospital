@@ -93,3 +93,55 @@ CREATE TABLE IF NOT EXISTS ambulances (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Medicines Table
+CREATE TABLE IF NOT EXISTS medicines (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150) NOT NULL,
+  category ENUM('Tablet','Syrup','Injection','Capsule','Ointment','Drops','Inhaler','Powder') DEFAULT 'Tablet',
+  stock INT DEFAULT 0,
+  expiry_date DATE,
+  price DECIMAL(10,2) DEFAULT 0.00,
+  supplier VARCHAR(200),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Prescriptions Table
+CREATE TABLE IF NOT EXISTS prescriptions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  medicine_id INT NOT NULL,
+  quantity INT DEFAULT 1,
+  notes TEXT,
+  prescribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+  FOREIGN KEY (medicine_id) REFERENCES medicines(id) ON DELETE CASCADE
+);
+
+-- ================= SAMPLE MEDICINES DATA =================
+INSERT INTO medicines (name, category, stock, expiry_date, price, supplier) VALUES
+('Paracetamol 500mg',    'Tablet',    150, '2027-06-15', 2.50,  'Sun Pharma'),
+('Amoxicillin 250mg',    'Capsule',   85,  '2026-12-20', 8.00,  'Cipla Ltd'),
+('Ibuprofen 400mg',      'Tablet',    200, '2027-03-10', 3.75,  'Dr. Reddy'),
+('Cetirizine 10mg',      'Tablet',    300, '2027-09-01', 1.50,  'Mankind Pharma'),
+('Azithromycin 500mg',   'Tablet',    45,  '2026-08-25', 15.00, 'Zydus Cadila'),
+('Cough Syrup (Benadryl)','Syrup',    60,  '2026-11-15', 65.00, 'Johnson & Johnson'),
+('Insulin Glargine',     'Injection', 25,  '2026-07-10', 450.00,'Novo Nordisk'),
+('Omeprazole 20mg',      'Capsule',   120, '2027-04-20', 5.00,  'Sun Pharma'),
+('Metformin 500mg',      'Tablet',    180, '2027-08-12', 4.00,  'USV Pvt Ltd'),
+('Amlodipine 5mg',       'Tablet',    90,  '2027-01-30', 6.50,  'Torrent Pharma'),
+('Salbutamol Inhaler',   'Inhaler',   8,   '2026-09-05', 120.00,'Cipla Ltd'),
+('Betadine Ointment',    'Ointment',  40,  '2027-05-18', 35.00, 'Win-Medicare'),
+('Diclofenac Gel',       'Ointment',  55,  '2027-02-28', 28.00, 'Novartis'),
+('ORS Powder',           'Powder',    5,   '2026-06-30', 12.00, 'FDC Ltd'),
+('Ciprofloxacin 500mg',  'Tablet',    7,   '2026-10-12', 10.00, 'Ranbaxy'),
+('Pantoprazole 40mg',    'Tablet',    110, '2027-07-22', 7.00,  'Alkem Labs'),
+('Eye Drops (Moxiflox)', 'Drops',     30,  '2026-08-01', 55.00, 'Allergan'),
+('Dolo 650mg',           'Tablet',    250, '2027-11-05', 3.00,  'Micro Labs'),
+('Vitamin D3 60K',       'Capsule',   75,  '2027-10-15', 25.00, 'Mankind Pharma'),
+('Ranitidine 150mg',     'Tablet',    3,   '2026-05-20', 4.50,  'GSK'),
+('Amikacin Injection',   'Injection', 15,  '2026-09-30', 85.00, 'Cipla Ltd'),
+('Levofloxacin 500mg',   'Tablet',    65,  '2027-03-25', 12.00, 'Glenmark'),
+('Multivitamin Syrup',   'Syrup',     42,  '2027-06-10', 75.00, 'Abbott India'),
+('B-Complex Forte',      'Tablet',    9,   '2026-07-18', 8.50,  'Abbott India');
+
