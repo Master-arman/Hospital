@@ -106,16 +106,16 @@ CREATE TABLE IF NOT EXISTS medicines (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Prescriptions Table
 CREATE TABLE IF NOT EXISTS prescriptions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   patient_id INT NOT NULL,
-  medicine_id INT NOT NULL,
+  medicine_name VARCHAR(150) NOT NULL,
   quantity INT DEFAULT 1,
   notes TEXT,
   prescribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
-  FOREIGN KEY (medicine_id) REFERENCES medicines(id) ON DELETE CASCADE
+  
+  -- Constraints
+  CONSTRAINT fk_patient FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
 );
 
 -- ================= SAMPLE MEDICINES DATA =================
@@ -145,3 +145,58 @@ INSERT INTO medicines (name, category, stock, expiry_date, price, supplier) VALU
 ('Multivitamin Syrup',   'Syrup',     42,  '2027-06-10', 75.00, 'Abbott India'),
 ('B-Complex Forte',      'Tablet',    9,   '2026-07-18', 8.50,  'Abbott India');
 
+-- Billing Receipts Table
+CREATE TABLE IF NOT EXISTS billing_receipts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  invoice_number VARCHAR(50) UNIQUE NOT NULL,
+  patient_name VARCHAR(150) NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  payment_mode VARCHAR(50),
+  status ENUM('pending', 'paid') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ================= ONLINE MEDICINE DELIVERY =================
+
+-- Delivery Addresses
+CREATE TABLE IF NOT EXISTS delivery_addresses (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  address_line VARCHAR(255) NOT NULL,
+  city VARCHAR(100),
+  pincode VARCHAR(10),
+  phone VARCHAR(20),
+  distance_km DECIMAL(6,2) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+);
+
+-- Orders
+CREATE TABLE IF NOT EXISTS orders (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  address_id INT,
+  total_price DECIMAL(10,2) NOT NULL,
+  payment_method ENUM('Cash','Card','UPI','Insurance') DEFAULT 'Cash',
+  status ENUM('Pending Verification','Approved','Packed','Out for Delivery','Delivered','Cancelled') DEFAULT 'Pending Verification',
+  prescription_file VARCHAR(255),
+  is_monthly_refill TINYINT(1) DEFAULT 0,
+  refill_interval_days INT DEFAULT 30,
+  next_refill_date DATE,
+  delivery_type ENUM('Home Delivery','Hospital Pickup') DEFAULT 'Home Delivery',
+  eta_minutes INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (patient_id) REFERENCES patients(id),
+  FOREIGN KEY (address_id) REFERENCES delivery_addresses(id)
+);
+
+-- Order Items
+CREATE TABLE IF NOT EXISTS order_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  medicine_name VARCHAR(150) NOT NULL,
+  quantity INT DEFAULT 1,
+  price_at_purchase DECIMAL(10,2),
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+);

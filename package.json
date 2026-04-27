@@ -1,0 +1,26 @@
+{
+  "name": "hospital",
+  "version": "1.0.0",
+  "description": "��#\u0000 \u0000h\u0000o\u0000s\u0000p\u0000i\u0000t\u0000a\u0000l\u0000\r\u0000 \u0000#\u0000 \u0000h\u0000o\u0000s\u0000p\u0000i\u0000t\u0000a\u0000l\u0000\r\u0000 \u0000#\u0000 \u0000h\u0000o\u0000s\u0000p\u0000i\u0000t\u0000a\u0000l\u0000\r\u0000 \u0000#\u0000 \u0000h\u0000o\u0000s\u0000p\u0000i\u0000t\u0000a\u0000l\u0000\r\u0000 \u0000",
+  "main": "index.js",
+  "scripts": {
+    "start": "cd backend && npm run dev",
+    "start:backend": "cd backend && npm start",
+    "build": "echo \"No build step required for this project\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Master-arman/hospital.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Master-arman/hospital/issues"
+  },
+  "homepage": "https://github.com/Master-arman/hospital#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "live-server": "^1.2.2"
+  }
+}

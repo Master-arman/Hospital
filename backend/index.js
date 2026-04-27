@@ -1,11 +1,35 @@
 import express from "express";
 import cors from "cors";
 import mysql from "mysql2/promise";
+import path from "path";
+import { fileURLToPath } from "url";
+import cron from "node-cron";
+import nodemailer from "nodemailer";
+import multer from "multer";
+import fs from "fs";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+// Multer for prescription file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+});
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+
+// Serve Static Frontend files from Express
+app.use(express.static(path.join(__dirname, "../app/hospital-app/Home page")));
+app.use('/uploads', express.static(uploadsDir));
 
 // ================= DATABASE CONNECTION (MySQL) =================
 
@@ -13,13 +37,17 @@ const pool = mysql.createPool({
   host: "127.0.0.1",
   port: 3306,
   user: "root",
-  password: "root",
+  password: "123456789",
   database: "arman",
   connectionLimit: 10,
   waitForConnections: true,
 });
 
 // ================= HEALTH CHECK =================
+
+app.get("/", (req, res) => {
+  res.redirect("/home.html");
+});
 
 app.get("/api", (req, res) => {
   res.json({ status: "✅ API is working" });
@@ -325,16 +353,16 @@ app.get("/api/medicines/alerts/all", async (req, res) => {
 
 app.post("/api/prescriptions", async (req, res) => {
   try {
-    const { patient_id, medicine_id, quantity, notes } = req.body;
+    const { patient_id, medicine_name, quantity, notes } = req.body;
     // Deduct stock
-    const [med] = await pool.query("SELECT stock, name FROM medicines WHERE id=?", [medicine_id]);
+    const [med] = await pool.query("SELECT stock, name FROM medicines WHERE name=?", [medicine_name]);
     if (!med.length) return res.status(404).json({ error: "Medicine not found" });
     if (med[0].stock < quantity) return res.status(400).json({ error: `Not enough stock for ${med[0].name}. Only ${med[0].stock} left.` });
 
-    await pool.query("UPDATE medicines SET stock = stock - ? WHERE id=?", [quantity, medicine_id]);
+    await pool.query("UPDATE medicines SET stock = stock - ? WHERE name=?", [quantity, medicine_name]);
     const [result] = await pool.query(
-      `INSERT INTO prescriptions (patient_id, medicine_id, quantity, notes) VALUES (?,?,?,?)`,
-      [patient_id, medicine_id, quantity, notes || ""]
+      `INSERT INTO prescriptions (patient_id, medicine_name, quantity, notes) VALUES (?,?,?,?)`,
+      [patient_id, medicine_name, quantity, notes || ""]
     );
     res.json({ message: "✅ Prescription added & stock deducted", id: result.insertId });
   } catch (err) {
@@ -345,9 +373,8 @@ app.post("/api/prescriptions", async (req, res) => {
 app.get("/api/prescriptions", async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT p.*, m.name as medicine_name, m.category, pt.name as patient_name 
+      `SELECT p.*, pt.name as patient_name 
        FROM prescriptions p 
-       JOIN medicines m ON p.medicine_id = m.id 
        JOIN patients pt ON p.patient_id = pt.id 
        ORDER BY p.prescribed_at DESC`
     );
@@ -360,9 +387,8 @@ app.get("/api/prescriptions", async (req, res) => {
 app.get("/api/prescriptions/patient/:patientId", async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT p.*, m.name as medicine_name, m.category 
+      `SELECT p.* 
        FROM prescriptions p 
-       JOIN medicines m ON p.medicine_id = m.id 
        WHERE p.patient_id=? ORDER BY p.prescribed_at DESC`,
       [req.params.patientId]
     );
@@ -373,12 +399,315 @@ app.get("/api/prescriptions/patient/:patientId", async (req, res) => {
 });
 
 // ======================================================
+// ================= BILLING API =========================
+// ======================================================
+
+app.post("/api/billing", async (req, res) => {
+  try {
+    const { invoice_number, patient_name, amount, payment_mode, status } = req.body;
+    const [result] = await pool.query(
+      `INSERT INTO billing_receipts (invoice_number, patient_name, amount, payment_mode, status) VALUES (?,?,?,?,?)`,
+      [invoice_number, patient_name, amount, payment_mode, status || 'pending']
+    );
+    res.json({ message: "✅ Billing receipt added", id: result.insertId });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ error: "Invoice number already exists" });
+    }
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/billing", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM billing_receipts ORDER BY id DESC");
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================================
+// ================= AUTOMATED ALERTS =====================
+// ======================================================
+
+// Setup nodemailer transporter (using a test account or mock for now)
+const transporter = nodemailer.createTransport({
+  host: 'smtp.ethereal.email',
+  port: 587,
+  auth: {
+      user: 'test_user', // Replace with real credentials in production
+      pass: 'test_pass'
+  }
+});
+
+// Cron job to run every hour and check for unpaid bills > 48 hours
+cron.schedule('0 * * * *', async () => {
+  try {
+    console.log("⏰ Running automated check for unpaid bills...");
+    
+    // Select bills that are pending and were created more than 48 hours ago
+    const [unpaidBills] = await pool.query(`
+      SELECT invoice_number, patient_name, amount, created_at 
+      FROM billing_receipts 
+      WHERE status = 'pending' 
+      AND created_at < DATE_SUB(NOW(), INTERVAL 48 HOUR)
+    `);
+
+    if (unpaidBills.length > 0) {
+      console.log(`⚠️ Found ${unpaidBills.length} unpaid bills older than 48 hours. Sending alert...`);
+      
+      let emailContent = "The following bills have been pending for more than 48 hours:\n\n";
+      unpaidBills.forEach(bill => {
+        emailContent += `- Invoice #${bill.invoice_number}: ${bill.patient_name} - $${bill.amount}\n`;
+      });
+
+      // Send email to accounting department
+      /* Uncomment and configure transporter to actually send
+      await transporter.sendMail({
+        from: '"Hospital System" <noreply@hospital.com>',
+        to: "accounting@hospital.com",
+        subject: "🚨 ALERT: Unpaid Bills (>48 Hours)",
+        text: emailContent,
+      });
+      */
+      
+      console.log("📧 Alert email generated for accounting department:\n", emailContent);
+    } else {
+      console.log("✅ No overdue bills found.");
+    }
+  } catch (error) {
+    console.error("❌ Error in automated billing alert cron job:", error);
+  }
+});
+
+// ======================================================
+// ================= DELIVERY ADDRESSES API ==============
+// ======================================================
+
+app.post("/api/delivery-addresses", async (req, res) => {
+  try {
+    const { patient_id, address_line, city, pincode, phone, distance_km } = req.body;
+    const [result] = await pool.query(
+      `INSERT INTO delivery_addresses (patient_id, address_line, city, pincode, phone, distance_km) VALUES (?,?,?,?,?,?)`,
+      [patient_id, address_line, city, pincode, phone, distance_km || 0]
+    );
+    res.json({ message: "✅ Address saved", id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/delivery-addresses/:patientId", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT * FROM delivery_addresses WHERE patient_id=? ORDER BY created_at DESC",
+      [req.params.patientId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ======================================================
+// ================= ORDERS API ==========================
+// ======================================================
+
+// Place a new order
+app.post("/api/orders", upload.single('prescription'), async (req, res) => {
+  try {
+    const { patient_id, address_id, items, payment_method, delivery_type, is_monthly_refill, distance_km } = req.body;
+    const parsedItems = typeof items === 'string' ? JSON.parse(items) : items;
+
+    if (!parsedItems || parsedItems.length === 0) {
+      return res.status(400).json({ error: "No items in order" });
+    }
+
+    // Calculate total price and validate stock
+    let totalPrice = 0;
+    for (const item of parsedItems) {
+      const [med] = await pool.query("SELECT stock, price FROM medicines WHERE name=?", [item.medicine_name]);
+      if (!med.length) return res.status(404).json({ error: `Medicine "${item.medicine_name}" not found` });
+      if (med[0].stock < item.quantity) return res.status(400).json({ error: `Not enough stock for ${item.medicine_name}. Only ${med[0].stock} left.` });
+      item.price = parseFloat(med[0].price);
+      totalPrice += item.price * item.quantity;
+    }
+
+    // Calculate ETA: 30 min prep + 5 min per km
+    const dist = parseFloat(distance_km) || 0;
+    const etaMinutes = delivery_type === 'Hospital Pickup' ? 30 : Math.round(30 + dist * 5);
+
+    // Determine next refill date
+    let nextRefillDate = null;
+    if (is_monthly_refill === '1' || is_monthly_refill === true) {
+      const d = new Date();
+      d.setDate(d.getDate() + 30);
+      nextRefillDate = d.toISOString().split('T')[0];
+    }
+
+    const prescriptionFile = req.file ? req.file.filename : null;
+
+    // Insert order
+    const [orderResult] = await pool.query(
+      `INSERT INTO orders (patient_id, address_id, total_price, payment_method, delivery_type, prescription_file, is_monthly_refill, next_refill_date, eta_minutes) VALUES (?,?,?,?,?,?,?,?,?)`,
+      [patient_id, address_id || null, totalPrice, payment_method || 'Cash', delivery_type || 'Home Delivery', prescriptionFile, is_monthly_refill ? 1 : 0, nextRefillDate, etaMinutes]
+    );
+    const orderId = orderResult.insertId;
+
+    // Insert items & deduct stock
+    for (const item of parsedItems) {
+      await pool.query(
+        `INSERT INTO order_items (order_id, medicine_name, quantity, price_at_purchase) VALUES (?,?,?,?)`,
+        [orderId, item.medicine_name, item.quantity, item.price]
+      );
+      await pool.query("UPDATE medicines SET stock = stock - ? WHERE name=?", [item.quantity, item.medicine_name]);
+    }
+
+    res.json({ message: "✅ Order placed successfully", id: orderId, eta_minutes: etaMinutes, total_price: totalPrice });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get all orders (admin queue)
+app.get("/api/orders", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT o.*, p.name as patient_name, da.address_line, da.city, da.pincode, da.phone, da.distance_km
+       FROM orders o
+       JOIN patients p ON o.patient_id = p.id
+       LEFT JOIN delivery_addresses da ON o.address_id = da.id
+       ORDER BY o.created_at DESC`
+    );
+    // Attach items to each order
+    for (const order of rows) {
+      const [items] = await pool.query("SELECT * FROM order_items WHERE order_id=?", [order.id]);
+      order.items = items;
+    }
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get single order
+app.get("/api/orders/:id", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT o.*, p.name as patient_name, da.address_line, da.city, da.pincode, da.phone, da.distance_km
+       FROM orders o
+       JOIN patients p ON o.patient_id = p.id
+       LEFT JOIN delivery_addresses da ON o.address_id = da.id
+       WHERE o.id=?`,
+      [req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: "Order not found" });
+    const order = rows[0];
+    const [items] = await pool.query("SELECT * FROM order_items WHERE order_id=?", [order.id]);
+    order.items = items;
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get orders by patient
+app.get("/api/orders/patient/:patientId", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT o.*, da.address_line, da.city FROM orders o LEFT JOIN delivery_addresses da ON o.address_id = da.id WHERE o.patient_id=? ORDER BY o.created_at DESC`,
+      [req.params.patientId]
+    );
+    for (const order of rows) {
+      const [items] = await pool.query("SELECT * FROM order_items WHERE order_id=?", [order.id]);
+      order.items = items;
+    }
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update order status
+app.put("/api/orders/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ['Pending Verification','Approved','Packed','Out for Delivery','Delivered','Cancelled'];
+    if (!validStatuses.includes(status)) return res.status(400).json({ error: "Invalid status" });
+
+    // If cancelling, restore stock
+    if (status === 'Cancelled') {
+      const [items] = await pool.query("SELECT * FROM order_items WHERE order_id=?", [req.params.id]);
+      for (const item of items) {
+        await pool.query("UPDATE medicines SET stock = stock + ? WHERE name=?", [item.quantity, item.medicine_name]);
+      }
+    }
+
+    await pool.query("UPDATE orders SET status=? WHERE id=?", [status, req.params.id]);
+    res.json({ message: `✅ Order #${req.params.id} updated to: ${status}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ===== AUTO-REFILL CRON (runs daily at midnight) =====
+cron.schedule('0 0 * * *', async () => {
+  try {
+    console.log("🔄 Running daily auto-refill check...");
+    const [dueOrders] = await pool.query(
+      `SELECT o.*, da.distance_km FROM orders o LEFT JOIN delivery_addresses da ON o.address_id = da.id WHERE o.is_monthly_refill = 1 AND o.next_refill_date <= CURDATE() AND o.status = 'Delivered'`
+    );
+
+    for (const order of dueOrders) {
+      const [items] = await pool.query("SELECT * FROM order_items WHERE order_id=?", [order.id]);
+      let totalPrice = 0;
+      let canRefill = true;
+
+      for (const item of items) {
+        const [med] = await pool.query("SELECT stock, price FROM medicines WHERE name=?", [item.medicine_name]);
+        if (!med.length || med[0].stock < item.quantity) { canRefill = false; break; }
+        totalPrice += parseFloat(med[0].price) * item.quantity;
+      }
+
+      if (!canRefill) {
+        console.log(`⚠️ Cannot auto-refill order #${order.id} — insufficient stock`);
+        continue;
+      }
+
+      const dist = parseFloat(order.distance_km) || 0;
+      const etaMinutes = order.delivery_type === 'Hospital Pickup' ? 30 : Math.round(30 + dist * 5);
+      const nextDate = new Date(); nextDate.setDate(nextDate.getDate() + 30);
+
+      const [newOrder] = await pool.query(
+        `INSERT INTO orders (patient_id, address_id, total_price, payment_method, delivery_type, is_monthly_refill, next_refill_date, eta_minutes, status) VALUES (?,?,?,?,?,1,?,?,?)`,
+        [order.patient_id, order.address_id, totalPrice, order.payment_method, order.delivery_type, nextDate.toISOString().split('T')[0], etaMinutes, 'Approved']
+      );
+
+      for (const item of items) {
+        await pool.query(`INSERT INTO order_items (order_id, medicine_name, quantity, price_at_purchase) VALUES (?,?,?,?)`,
+          [newOrder.insertId, item.medicine_name, item.quantity, item.price_at_purchase]);
+        await pool.query("UPDATE medicines SET stock = stock - ? WHERE name=?", [item.quantity, item.medicine_name]);
+      }
+
+      // Mark original order's next_refill_date forward
+      await pool.query("UPDATE orders SET next_refill_date=? WHERE id=?", [nextDate.toISOString().split('T')[0], order.id]);
+      console.log(`✅ Auto-refill order #${newOrder.insertId} created from original #${order.id}`);
+    }
+  } catch (err) {
+    console.error("❌ Auto-refill cron error:", err);
+  }
+});
+
+// ======================================================
 // START SERVER (for local development)
 // ======================================================
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Hospital API running on http://localhost:${PORT}`);
+  console.log(`✅ Backend successfully connected to frontend!`);
+  console.log(`✅ Successfully complete. hn complete ho gaya hai!`);
 });
 
 export default app;

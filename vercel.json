@@ -6,11 +6,8 @@
       "use": "@vercel/node"
     },
     {
-      "src": "app/hospital-app/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "app/hospital-app/dist/hospital-app"
-      }
+      "src": "app/hospital-app/Home page/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -19,11 +16,12 @@
       "dest": "backend/index.js"
     },
     {
-      "handle": "filesystem"
+      "src": "/uploads/(.*)",
+      "dest": "backend/index.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/app/hospital-app/dist/hospital-app/index.html"
+      "dest": "app/hospital-app/Home page/$1"
     }
   ]
 }
