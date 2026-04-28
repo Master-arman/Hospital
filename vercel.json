@@ -20,6 +20,10 @@
       "dest": "backend/index.js"
     },
     {
+      "src": "/",
+      "dest": "app/hospital-app/Home page/home.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "app/hospital-app/Home page/$1"
     }
