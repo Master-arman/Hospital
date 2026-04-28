@@ -42,6 +42,7 @@ const pool = mysql.createPool({
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "123456789",
   database: process.env.DB_NAME || "arman",
+  ssl: process.env.DB_HOST ? { rejectUnauthorized: false } : undefined,
   connectionLimit: 10,
   waitForConnections: true,
 });
