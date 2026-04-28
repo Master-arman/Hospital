@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FAQ - Hospital Management System</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, lightskyblue, #e0f7ff);
+        color: #333;
+        padding: 20px;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: rgb(108, 3, 246);
+        margin-bottom: 20px;
+      }
+      .faq-item {
+        background: #f9f9f9;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 8px;
+        border-left: 4px solid rgb(108, 3, 246);
+      }
+      .faq-item strong {
+        color: rgb(108, 3, 246);
+        display: block;
+        margin-bottom: 8px;
+      }
+      .back-btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background: rgb(108, 3, 246);
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 20px;
+        cursor: pointer;
+      }
+      .back-btn:hover {
+        background: rgb(146, 71, 245);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Frequently Asked Questions (FAQ)</h1>
+
+      <div class="faq-item">
+        <strong>Q: How do I register for an online account?</strong>
+        <p>
+          A: Click on the "New Patient" button on the home page, fill in your personal details, and
+          create a secure password. Your account will be activated immediately.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <strong>Q: Can I book an appointment online?</strong>
+        <p>
+          A: Yes! Log in to your account, navigate to the appointments section, select your
+          preferred department and doctor, choose your time slot, and confirm your booking.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <strong>Q: How do I access my medical records?</strong>
+        <p>
+          A: Login to your patient portal. All your medical records, test results, and prescriptions
+          will be available in the "My Records" section.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <strong>Q: What payment methods do you accept?</strong>
+        <p>
+          A: We accept credit cards, debit cards, online banking transfers, and digital wallets. All
+          transactions are secure and encrypted.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <strong>Q: Is my patient data secure?</strong>
+        <p>
+          A: Yes, we follow HIPAA compliance standards and use advanced encryption to protect all
+          patient information. Your privacy is our priority.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <strong>Q: How can I reschedule an appointment?</strong>
+        <p>
+          A: Go to "My Appointments" in your dashboard, select the appointment you want to
+          reschedule, and choose a new time slot from available options.
+        </p>
+      </div>
+
+      <div class="faq-item">
+        <strong>Q: Do you offer emergency services?</strong>
+        <p>
+          A: Yes, our emergency department is open 24/7. In case of emergency, call our ambulance
+          service immediately or visit our nearest facility.
+        </p>
+      </div>
+
+      <button class="back-btn" onclick="history.back()">← Go Back</button>
+    </div>
+  </body>
+</html>

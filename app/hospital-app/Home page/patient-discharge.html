@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patient Discharge</title>
+    <style>
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
+      }
+
+      .form-container {
+        background-color: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 600px;
+      }
+
+      .form-container h2 {
+        text-align: center;
+        font-size: 28px;
+        margin-bottom: 30px;
+        color: #667eea;
+        font-weight: bold;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      input[type='text'],
+      input[type='number'],
+      input[type='date'],
+      input[type='email'],
+      textarea,
+      select {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 2px solid #ddd;
+        font-size: 16px;
+        font-family: inherit;
+        box-sizing: border-box;
+        transition: border-color 0.3s;
+      }
+
+      input[type='text']:focus,
+      input[type='number']:focus,
+      input[type='date']:focus,
+      input[type='email']:focus,
+      textarea:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 15px;
+        background: #f5f5f5;
+        border-radius: 8px;
+      }
+
+      .checkbox-group input[type='checkbox'] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+      }
+
+      .checkbox-group label {
+        margin: 0;
+        cursor: pointer;
+        font-weight: 500;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+      }
+
+      button {
+        flex: 1;
+        padding: 12px 30px;
+        border: none;
+        cursor: pointer;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s;
+      }
+
+      .btn-submit {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+      }
+
+      .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(255, 107, 107, 0.4);
+      }
+
+      .btn-search {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        flex: 0;
+        width: auto;
+        padding: 12px 25px;
+      }
+
+      .btn-search:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-back {
+        background-color: #ddd;
+        color: #333;
+      }
+
+      .btn-back:hover {
+        background-color: #ccc;
+      }
+
+      .btn-clear {
+        background-color: #95a5a6;
+        color: white;
+      }
+
+      .btn-clear:hover {
+        background-color: #7f8c8d;
+      }
+
+      .alert {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .alert-success {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-left: 4px solid #2e7d32;
+      }
+
+      .alert-error {
+        background: #ffebee;
+        color: #c62828;
+        border-left: 4px solid #c62828;
+      }
+
+      .alert.show {
+        display: block;
+      }
+
+      .form-divider {
+        border-top: 2px solid #eee;
+        margin: 30px 0 20px 0;
+        padding-top: 20px;
+      }
+
+      .form-divider h3 {
+        color: #667eea;
+        font-size: 16px;
+        margin-bottom: 15px;
+      }
+
+      .required {
+        color: #f44336;
+      }
+
+      .patient-info-box {
+        background: #f9f9f9;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .patient-info-box.show {
+        display: block;
+      }
+
+      .info-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 10px;
+      }
+
+      .info-item {
+        padding: 10px;
+        background: white;
+        border-radius: 5px;
+        border-left: 3px solid #667eea;
+      }
+
+      .info-label {
+        font-weight: 600;
+        color: #666;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      .info-value {
+        color: #333;
+        font-size: 16px;
+        margin-top: 5px;
+      }
+
+      .search-container {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      #searchInput {
+        flex: 1;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="form-container">
+      <h2>🏥 Patient Discharge Form</h2>
+
+      <div class="alert alert-success" id="successMsg"></div>
+      <div class="alert alert-error" id="errorMsg"></div>
+
+      <!-- Search Section -->
+      <div class="form-divider">
+        <h3>🔍 Find Patient to Discharge</h3>
+      </div>
+
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Enter Patient ID or Name..." />
+        <button type="button" id="searchBtn" class="btn-search">🔎 Search</button>
+      </div>
+
+      <!-- Patient Info Display -->
+      <div class="patient-info-box" id="patientInfoBox">
+        <div class="info-row">
+          <div class="info-item">
+            <div class="info-label">Patient ID</div>
+            <div class="info-value" id="displayId">-</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Patient Name</div>
+            <div class="info-value" id="displayName">-</div>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-item">
+            <div class="info-label">Gender</div>
+            <div class="info-value" id="displayGender">-</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Disease/Condition</div>
+            <div class="info-value" id="displayDisease">-</div>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-item">
+            <div class="info-label">Admission Date</div>
+            <div class="info-value" id="displayAdmissionDate">-</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Remaining Deposit</div>
+            <div class="info-value" id="displayDeposit">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Discharge Form -->
+      <form id="dischargeForm" style="display: none">
+        <!-- Discharge Information Section -->
+        <div class="form-divider">
+          <h3>📋 Discharge Details</h3>
+        </div>
+
+        <div class="form-group">
+          <label for="dischargeDate">Discharge Date <span class="required">*</span></label>
+          <input type="date" id="dischargeDate" required />
+        </div>
+
+        <div class="form-group">
+          <label for="finalDiagnosis">Final Diagnosis/Treatment Summary</label>
+          <textarea
+            id="finalDiagnosis"
+            placeholder="Enter final diagnosis and treatment details..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="doctorName">Treating Doctor Name</label>
+          <input type="text" id="doctorName" placeholder="Enter doctor's name" />
+        </div>
+
+        <!-- Financial Settlement Section -->
+        <div class="form-divider">
+          <h3>💰 Financial Settlement</h3>
+        </div>
+
+        <div class="form-group">
+          <label for="finalCharges">Final Treatment Charges ($)</label>
+          <input type="number" id="finalCharges" step="0.01" placeholder="0.00" />
+        </div>
+
+        <div class="form-group">
+          <label for="amountPaid">Total Amount Paid ($)</label>
+          <input type="number" id="amountPaid" step="0.01" placeholder="0.00" readonly />
+        </div>
+
+        <div class="form-group">
+          <label>Balance Due ($)</label>
+          <input type="number" id="balanceDue" step="0.01" placeholder="0.00" readonly />
+        </div>
+
+        <!-- Medications & Follow-up Section -->
+        <div class="form-divider">
+          <h3>💊 Medications & Follow-up</h3>
+        </div>
+
+        <div class="form-group">
+          <label for="medications">Prescribed Medications</label>
+          <textarea
+            id="medications"
+            placeholder="List any prescribed medications, dosage, and duration..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="followUpNotes">Follow-up Instructions</label>
+          <textarea
+            id="followUpNotes"
+            placeholder="Enter follow-up appointment details, precautions, etc..."
+          ></textarea>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="confirmedAgreement" name="confirmedAgreement" required />
+          <label for="confirmedAgreement"
+            >I confirm all patient discharge details are correct</label
+          >
+        </div>
+
+        <!-- Buttons -->
+        <div class="button-group">
+          <button type="submit" class="btn-submit" id="dischargeBtn">✅ Discharge Patient</button>
+          <button type="button" class="btn-clear" id="resetBtn">🔄 Reset Form</button>
+          <button type="button" class="btn-back" id="backBtn">↩️ Back</button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      const API_URL = 'http://localhost:5000/api';
+
+      // DOM Elements
+      const searchInput = document.getElementById('searchInput');
+      const searchBtn = document.getElementById('searchBtn');
+      const patientInfoBox = document.getElementById('patientInfoBox');
+      const dischargeForm = document.getElementById('dischargeForm');
+      const dischargeBtn = document.getElementById('dischargeBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const backBtn = document.getElementById('backBtn');
+      const successMsg = document.getElementById('successMsg');
+      const errorMsg = document.getElementById('errorMsg');
+
+      // Form fields
+      const dischargeDate = document.getElementById('dischargeDate');
+      const finalCharges = document.getElementById('finalCharges');
+      const amountPaid = document.getElementById('amountPaid');
+      const balanceDue = document.getElementById('balanceDue');
+
+      // State
+      let currentPatient = null;
+
+      // Event Listeners
+      searchBtn.addEventListener('click', searchPatient);
+      dischargeForm.addEventListener('submit', submitDischarge);
+      resetBtn.addEventListener('click', resetForm);
+      backBtn.addEventListener('click', () => window.history.back());
+      finalCharges.addEventListener('input', calculateBalance);
+      amountPaid.addEventListener('input', calculateBalance);
+
+      // Set today's date as default
+      const today = new Date().toISOString().split('T')[0];
+      dischargeDate.value = today;
+
+      // ========== SEARCH PATIENT ==========
+      async function searchPatient() {
+        const searchQuery = searchInput.value.trim();
+
+        if (!searchQuery) {
+          showError('❌ Please enter Patient ID or Name');
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/patients`);
+          const patients = await response.json();
+
+          // Search by ID (priority) or Name
+          const foundPatient = patients.find(
+            (p) =>
+              p.id.toString() === searchQuery ||
+              p.name.toLowerCase().includes(searchQuery.toLowerCase()),
+          );
+
+          if (foundPatient) {
+            currentPatient = foundPatient;
+            displayPatientInfo(foundPatient);
+            dischargeForm.style.display = 'block';
+            amountPaid.value = foundPatient.deposit || 0;
+            calculateBalance();
+            showSuccess(`✅ Patient found! Ready for discharge.`);
+          } else {
+            showError(`❌ Patient not found. Please check the ID or name.`);
+            dischargeForm.style.display = 'none';
+            patientInfoBox.classList.remove('show');
+          }
+        } catch (error) {
+          console.error('Search error:', error);
+          showError(`❌ Failed to search patients: ${error.message}`);
+        }
+      }
+
+      // ========== DISPLAY PATIENT INFO ==========
+      function displayPatientInfo(patient) {
+        document.getElementById('displayId').textContent = patient.id;
+        document.getElementById('displayName').textContent = patient.name;
+        document.getElementById('displayGender').textContent = patient.gender;
+        document.getElementById('displayDisease').textContent = patient.disease || 'Not specified';
+        document.getElementById('displayAdmissionDate').textContent =
+          patient.admission_date || new Date().toLocaleDateString();
+        document.getElementById('displayDeposit').textContent =
+          `$${(patient.deposit || 0).toFixed(2)}`;
+
+        patientInfoBox.classList.add('show');
+      }
+
+      // ========== CALCULATE BALANCE ==========
+      function calculateBalance() {
+        const charges = parseFloat(finalCharges.value) || 0;
+        const paid = parseFloat(amountPaid.value) || 0;
+        const balance = charges - paid;
+
+        balanceDue.value = Math.max(balance, 0).toFixed(2);
+      }
+
+      // ========== SUBMIT DISCHARGE ==========
+      async function submitDischarge(e) {
+        e.preventDefault();
+
+        if (!currentPatient) {
+          showError('❌ Please search and select a patient first');
+          return;
+        }
+
+        if (!dischargeDate.value) {
+          showError('❌ Please enter discharge date');
+          return;
+        }
+
+        const confirmedAgreement = document.getElementById('confirmedAgreement').checked;
+        if (!confirmedAgreement) {
+          showError('❌ Please confirm all details are correct');
+          return;
+        }
+
+        const dischargeData = {
+          name: currentPatient.name,
+          gender: currentPatient.gender,
+          disease: currentPatient.disease,
+          deposit: parseFloat(amountPaid.value) || 0,
+          ambulance_required: currentPatient.ambulance_required,
+          status: 'Discharged',
+          discharge_date: dischargeDate.value,
+          final_diagnosis: document.getElementById('finalDiagnosis').value.trim(),
+          doctor_name: document.getElementById('doctorName').value.trim(),
+          final_charges: parseFloat(finalCharges.value) || 0,
+          medications: document.getElementById('medications').value.trim(),
+          follow_up_notes: document.getElementById('followUpNotes').value.trim(),
+        };
+
+        try {
+          const response = await fetch(`${API_URL}/patients/${currentPatient.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dischargeData),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            showSuccess(
+              `✅ Patient "${currentPatient.name}" has been successfully discharged!\nDischarge Date: ${dischargeDate.value}`,
+            );
+            setTimeout(() => {
+              window.location.href = 'patients-list.html';
+            }, 2500);
+          } else {
+            showError(`❌ Error: ${data.error}`);
+          }
+        } catch (error) {
+          console.error('Discharge error:', error);
+          showError(`❌ Failed to discharge patient: ${error.message}`);
+        }
+      }
+
+      // ========== RESET FORM ==========
+      function resetForm() {
+        dischargeForm.reset();
+        patientInfoBox.classList.remove('show');
+        dischargeForm.style.display = 'none';
+        searchInput.value = '';
+        currentPatient = null;
+        const today = new Date().toISOString().split('T')[0];
+        dischargeDate.value = today;
+        showSuccess('');
+        showError('');
+      }
+
+      // ========== UI HELPER FUNCTIONS ==========
+      function showSuccess(msg) {
+        if (msg) {
+          successMsg.textContent = msg;
+          successMsg.classList.add('show');
+        } else {
+          successMsg.classList.remove('show');
+        }
+        errorMsg.classList.remove('show');
+      }
+
+      function showError(msg) {
+        if (msg) {
+          errorMsg.textContent = msg;
+          errorMsg.classList.add('show');
+        } else {
+          errorMsg.classList.remove('show');
+        }
+        successMsg.classList.remove('show');
+      }
+    </script>
+  </body>
+</html>

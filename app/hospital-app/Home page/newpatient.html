@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Patient Form</title>
+    <style>
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
+      }
+
+      .form-container {
+        background-color: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 500px;
+      }
+
+      .form-container h2 {
+        text-align: center;
+        font-size: 28px;
+        margin-bottom: 30px;
+        color: #667eea;
+        font-weight: bold;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      input[type='text'],
+      input[type='number'],
+      input[type='tel'],
+      select {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 2px solid #ddd;
+        font-size: 16px;
+        font-family: inherit;
+        box-sizing: border-box;
+        transition: border-color 0.3s;
+      }
+
+      input[type='text']:focus,
+      input[type='number']:focus,
+      input[type='tel']:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .radio-group {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        margin-top: 10px;
+      }
+
+      .radio-group input[type='radio'] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .radio-group label {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-weight: 500;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 15px;
+        background: #f5f5f5;
+        border-radius: 8px;
+      }
+
+      .checkbox-group input[type='checkbox'] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+      }
+
+      .checkbox-group label {
+        margin: 0;
+        cursor: pointer;
+        font-weight: 500;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+      }
+
+      button {
+        flex: 1;
+        padding: 12px 30px;
+        border: none;
+        cursor: pointer;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s;
+      }
+
+      .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-back {
+        background-color: #ddd;
+        color: #333;
+      }
+
+      .btn-back:hover {
+        background-color: #ccc;
+      }
+
+      .alert {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .alert-success {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-left: 4px solid #2e7d32;
+      }
+
+      .alert-error {
+        background: #ffebee;
+        color: #c62828;
+        border-left: 4px solid #c62828;
+      }
+
+      .alert.show {
+        display: block;
+      }
+
+      .form-divider {
+        border-top: 2px solid #eee;
+        margin: 30px 0 20px 0;
+        padding-top: 20px;
+      }
+
+      .form-divider h3 {
+        color: #667eea;
+        font-size: 16px;
+        margin-bottom: 15px;
+      }
+
+      .required {
+        color: #f44336;
+      }
+
+      .btn-update {
+        background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      }
+
+      .btn-update:hover {
+        box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+      }
+
+      #searchInput {
+        box-sizing: border-box;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="form-container">
+      <h2 id="formTitle">🏥 New Patient Registration</h2>
+
+      <div class="alert alert-success" id="successMsg"></div>
+      <div class="alert alert-error" id="errorMsg"></div>
+
+      <!-- Search Section for Existing Patients -->
+      <div class="form-divider">
+        <h3>🔍 Load Existing Patient (Optional)</h3>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-bottom: 20px">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Enter Patient ID or Name to load existing data..."
+          style="flex: 1"
+        />
+        <button
+          type="button"
+          id="searchBtn"
+          class="btn-submit"
+          style="flex: 0; width: auto; padding: 12px 20px"
+        >
+          Search
+        </button>
+        <button
+          type="button"
+          id="clearBtn"
+          class="btn-back"
+          style="flex: 0; width: auto; padding: 12px 20px"
+        >
+          Clear
+        </button>
+      </div>
+
+      <form id="patientForm">
+        <!-- Personal Information Section -->
+        <div class="form-group">
+          <label for="idProof">ID Proof Type <span class="required">*</span></label>
+          <select id="idProof" name="idProof" required>
+            <option value="">Select ID Proof</option>
+            <option value="aadhar">Aadhar Card</option>
+            <option value="pan">PAN Card</option>
+            <option value="voter">Voter ID</option>
+            <option value="driving">Driving License</option>
+            <option value="passport">Passport</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="Number">ID Number <span class="required">*</span></label>
+          <input type="text" id="Number" placeholder="Enter ID number" required />
+        </div>
+
+        <div class="form-group">
+          <label for="name">Patient Name <span class="required">*</span></label>
+          <input type="text" id="name" placeholder="Enter full name" required />
+        </div>
+
+        <div class="form-group">
+          <label>Gender <span class="required">*</span></label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" name="gender" value="Male" required />
+              Male
+            </label>
+            <label>
+              <input type="radio" name="gender" value="Female" />
+              Female
+            </label>
+            <label>
+              <input type="radio" name="gender" value="Other" />
+              Other
+            </label>
+          </div>
+        </div>
+
+        <!-- Medical Information Section -->
+        <div class="form-divider">
+          <h3>📋 Medical Information</h3>
+        </div>
+
+        <div class="form-group">
+          <label for="Disease">Disease/Condition</label>
+          <input type="text" id="Disease" placeholder="Enter disease or medical condition" />
+        </div>
+
+        <!-- Financial Information Section -->
+        <div class="form-divider">
+          <h3>💰 Financial Information</h3>
+        </div>
+
+        <div class="form-group">
+          <label for="Deposite">Deposit Amount ($)</label>
+          <input type="number" id="Deposite" step="0.01" placeholder="0.00" />
+        </div>
+
+        <!-- Service Requirements Section -->
+        <div class="form-divider">
+          <h3>🚑 Service Requirements</h3>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="ambulanceRequired" name="ambulanceRequired" />
+          <label for="ambulanceRequired">Ambulance Required</label>
+        </div>
+
+        <!-- Buttons -->
+        <div class="button-group">
+          <button type="submit" class="btn-submit" id="submitBtn">➕ Add Patient</button>
+          <button type="button" class="btn-back" id="backBtn">↩️ Back</button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      const API_URL = 'http://localhost:5000/api';
+
+      // DOM Elements
+      const patientForm = document.getElementById('patientForm');
+      const formTitle = document.getElementById('formTitle');
+      const submitBtn = document.getElementById('submitBtn');
+      const backBtn = document.getElementById('backBtn');
+      const searchBtn = document.getElementById('searchBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const searchInput = document.getElementById('searchInput');
+      const successMsg = document.getElementById('successMsg');
+      const errorMsg = document.getElementById('errorMsg');
+
+      // State management
+      let currentPatientId = null;
+      let isEditMode = false;
+
+      // Event Listeners
+      patientForm.addEventListener('submit', submitForm);
+      backBtn.addEventListener('click', () => window.history.back());
+      searchBtn.addEventListener('click', searchPatient);
+      clearBtn.addEventListener('click', clearForm);
+
+      // ========== SEARCH & LOAD PATIENT ==========
+      async function searchPatient() {
+        const searchQuery = searchInput.value.trim();
+
+        if (!searchQuery) {
+          showError('❌ Please enter Patient ID or Name');
+          return;
+        }
+
+        try {
+          // First, try to get all patients and search
+          const response = await fetch(`${API_URL}/patients`);
+          const patients = await response.json();
+
+          // Search by ID (priority) or Name
+          let foundPatient = patients.find(
+            (p) =>
+              p.id.toString() === searchQuery ||
+              p.name.toLowerCase().includes(searchQuery.toLowerCase()),
+          );
+
+          if (foundPatient) {
+            loadPatientData(foundPatient);
+            showSuccess(`✅ Patient found! Ready to update.`);
+          } else {
+            showError(`❌ Patient not found. Please check the ID or name.`);
+            currentPatientId = null;
+            isEditMode = false;
+          }
+        } catch (error) {
+          console.error('Search error:', error);
+          showError(`❌ Failed to search patients: ${error.message}`);
+        }
+      }
+
+      // ========== LOAD PATIENT DATA INTO FORM ==========
+      function loadPatientData(patient) {
+        // Set form fields with patient data
+        document.getElementById('idProof').value = patient.id_proof || '';
+        document.getElementById('Number').value = patient.id_number || '';
+        document.getElementById('name').value = patient.name || '';
+
+        // Set gender radio button
+        if (patient.gender) {
+          const genderRadio = document.querySelector(
+            `input[name='gender'][value='${patient.gender}']`,
+          );
+          if (genderRadio) genderRadio.checked = true;
+        }
+
+        document.getElementById('Disease').value = patient.disease || '';
+        document.getElementById('Deposite').value = patient.deposit || '';
+        document.getElementById('ambulanceRequired').checked =
+          patient.ambulance_required === 1 || patient.ambulance_required === true;
+
+        // Update UI to show we're in edit mode
+        currentPatientId = patient.id;
+        isEditMode = true;
+        formTitle.textContent = `🏥 Update Patient - ID: ${patient.id}`;
+        submitBtn.textContent = '💾 Update Patient';
+        submitBtn.classList.add('btn-update');
+        searchInput.disabled = true;
+        searchBtn.disabled = true;
+      }
+
+      // ========== CLEAR FORM & RESET ==========
+      function clearForm() {
+        patientForm.reset();
+        document
+          .querySelectorAll("input[name='gender']")
+          .forEach((radio) => (radio.checked = false));
+        searchInput.value = '';
+        searchInput.disabled = false;
+        searchBtn.disabled = false;
+        currentPatientId = null;
+        isEditMode = false;
+        formTitle.textContent = '🏥 New Patient Registration';
+        submitBtn.textContent = '➕ Add Patient';
+        submitBtn.classList.remove('btn-update');
+        showSuccess('');
+        showError('');
+      }
+
+      // ========== SUBMIT FORM HANDLER ==========
+      async function submitForm(e) {
+        e.preventDefault();
+
+        // Get form values and trim whitespace
+        const idProof = document.getElementById('idProof').value.trim();
+        const idNumber = document.getElementById('Number').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const gender = document.querySelector("input[name='gender']:checked")?.value;
+        const disease = document.getElementById('Disease').value.trim();
+        const deposit = document.getElementById('Deposite').value.trim();
+        const ambulanceRequired = document.getElementById('ambulanceRequired').checked ? 1 : 0;
+
+        // Validation
+        if (!idNumber) {
+          showError('❌ Please enter ID Number');
+          return;
+        }
+
+        if (!name) {
+          showError('❌ Please enter Patient Name');
+          return;
+        }
+
+        if (!gender) {
+          showError('❌ Please select a Gender');
+          return;
+        }
+
+        if (!idProof) {
+          showError('❌ Please select an ID Proof Type');
+          return;
+        }
+
+        // Prepare data
+        const patientData = {
+          id_proof: idProof,
+          id_number: idNumber,
+          name: name,
+          gender: gender,
+          disease: disease || null,
+          deposit: deposit ? parseFloat(deposit) : 0,
+          ambulance_required: ambulanceRequired,
+        };
+
+        console.log('Sending data:', patientData);
+
+        try {
+          let response;
+          let url;
+
+          if (isEditMode && currentPatientId) {
+            // UPDATE existing patient
+            url = `${API_URL}/patients/${currentPatientId}`;
+            response = await fetch(url, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(patientData),
+            });
+          } else {
+            // CREATE new patient
+            url = `${API_URL}/patients`;
+            response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(patientData),
+            });
+          }
+
+          const data = await response.json();
+
+          if (response.ok) {
+            if (isEditMode) {
+              showSuccess(`✅ ${data.message} Successfully updated!`);
+            } else {
+              showSuccess(`✅ ${data.message}\nPatient ID: ${data.id}`);
+            }
+
+            setTimeout(() => {
+              if (isEditMode) {
+                clearForm();
+              } else {
+                window.location.href = 'patients-list.html';
+              }
+            }, 2000);
+          } else {
+            showError(`❌ Error: ${data.error}`);
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          const action = isEditMode ? 'update' : 'add';
+          showError(`❌ Failed to ${action} patient: ${error.message}`);
+        }
+      }
+
+      // ========== UI HELPER FUNCTIONS ==========
+      function showSuccess(msg) {
+        if (msg) {
+          successMsg.textContent = msg;
+          successMsg.classList.add('show');
+        } else {
+          successMsg.classList.remove('show');
+        }
+        errorMsg.classList.remove('show');
+      }
+
+      function showError(msg) {
+        if (msg) {
+          errorMsg.textContent = msg;
+          errorMsg.classList.add('show');
+        } else {
+          errorMsg.classList.remove('show');
+        }
+        successMsg.classList.remove('show');
+      }
+    </script>
+  </body>
+</html>

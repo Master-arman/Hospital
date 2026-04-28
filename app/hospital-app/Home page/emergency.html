@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emergency Care - Hospital Management System</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, lightskyblue, #e0f7ff);
+        color: #333;
+        padding: 20px;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: crimson;
+        margin-bottom: 20px;
+      }
+      h2 {
+        color: rgb(108, 3, 246);
+        margin-top: 20px;
+        margin-bottom: 10px;
+      }
+      p {
+        line-height: 1.8;
+        margin-bottom: 15px;
+      }
+      .service-item {
+        background: #f9f9f9;
+        padding: 15px;
+        margin: 10px 0;
+        border-left: 4px solid crimson;
+        border-radius: 4px;
+      }
+      .back-btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background: rgb(108, 3, 246);
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 20px;
+        cursor: pointer;
+      }
+      .back-btn:hover {
+        background: rgb(146, 71, 245);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚑 Emergency Care Services</h1>
+      <p>
+        Our 24/7 emergency department is equipped with state-of-the-art facilities and staffed by
+        experienced emergency medicine professionals.
+      </p>
+
+      <h2>Services Offered:</h2>
+      <div class="service-item">
+        <strong>Trauma Care</strong> - Immediate treatment for injury victims with specialized
+        trauma surgeons
+      </div>
+      <div class="service-item">
+        <strong>Cardiac Emergency</strong> - Rapid response for heart attacks and cardiac events
+      </div>
+      <div class="service-item">
+        <strong>Respiratory Support</strong> - ICU beds with advanced ventilation equipment
+      </div>
+      <div class="service-item">
+        <strong>Stroke Management</strong> - Specialized neurology team for stroke patients
+      </div>
+      <div class="service-item">
+        <strong>Pediatric Emergency</strong> - Dedicated emergency care for children
+      </div>
+      <div class="service-item">
+        <strong>Ambulance Services</strong> - Fast response ambulances with paramedics
+      </div>
+
+      <h2>Emergency Hotline: 24/7</h2>
+      <p>Contact us immediately for any medical emergency. Our team is always ready to help.</p>
+
+      <button class="back-btn" onclick="history.back()">← Go Back</button>
+    </div>
+  </body>
+</html>

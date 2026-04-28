@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Member Signup - Hospital Management</title>
+    <style>
+      /* General body styling */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, lightskyblue 0%, #74b9ff 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .signup-container {
+        background: honeydew;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(1, 68, 249, 0.3);
+        width: 100%;
+        max-width: 450px;
+        animation: slideIn 0.5s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .signup-container h1 {
+        text-align: center;
+        color: #0648ff;
+        margin-bottom: 10px;
+        font-size: 28px;
+      }
+
+      .signup-container p {
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 14px;
+      }
+
+      /* Form group */
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      /* Labels */
+      label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: block;
+        color: #333;
+      }
+
+      /* Input fields */
+      input[type='text'],
+      input[type='email'],
+      input[type='password'],
+      input[type='tel'],
+      select {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 14px;
+        border: 2px solid #0648ff;
+        border-radius: 6px;
+        color: #0648ff;
+        transition: all 0.3s ease;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      input[type='text']:focus,
+      input[type='email']:focus,
+      input[type='password']:focus,
+      input[type='tel']:focus,
+      select:focus {
+        outline: none;
+        border-color: #0144f9;
+        box-shadow: 0 0 10px rgba(1, 68, 249, 0.2);
+        transform: translateY(-2px);
+      }
+
+      input[type='text']:hover,
+      input[type='email']:hover,
+      input[type='password']:hover,
+      input[type='tel']:hover,
+      select:hover {
+        border-color: #0144f9;
+      }
+
+      /* Button styling */
+      .btn-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 25px;
+      }
+
+      button {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+
+      .btn-signup {
+        background-color: #22b14c;
+        color: white;
+        box-shadow: 0 6px 20px rgba(34, 177, 76, 0.3);
+      }
+
+      .btn-signup:hover {
+        background-color: #1a8a39;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(34, 177, 76, 0.4);
+      }
+
+      .btn-login {
+        background-color: #45688d;
+        color: white;
+        box-shadow: 0 6px 20px rgba(69, 104, 141, 0.3);
+      }
+
+      .btn-login:hover {
+        background-color: #097bf5;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(9, 123, 245, 0.4);
+      }
+
+      /* Password requirements */
+      .password-info {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        padding: 8px;
+        background: #f0f0f0;
+        border-radius: 4px;
+        border-left: 3px solid #0648ff;
+      }
+
+      /* Form row for side-by-side fields */
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      /* Responsive */
+      @media (max-width: 480px) {
+        .signup-container {
+          padding: 30px 20px;
+        }
+
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+
+        .signup-container h1 {
+          font-size: 24px;
+        }
+      }
+
+      /* Link styling */
+      .login-link {
+        text-align: center;
+        margin-top: 20px;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .login-link a {
+        color: #0648ff;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s;
+      }
+
+      .login-link a:hover {
+        color: #0144f9;
+        text-decoration: underline;
+      }
+
+      /* Success message */
+      .success-msg {
+        display: none;
+        background: #d4edda;
+        color: #155724;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        border: 1px solid #c3e6cb;
+      }
+
+      /* Error message */
+      .error-msg {
+        display: none;
+        background: #f8d7da;
+        color: #721c24;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        border: 1px solid #f5c6cb;
+      }
+
+      /* OTP Section */
+      .otp-section {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        border: 3px solid #0648ff;
+        box-shadow: 0 4px 15px rgba(6, 72, 255, 0.2);
+      }
+
+      .otp-section h3 {
+        color: #0648ff;
+        margin-bottom: 20px;
+        font-size: 20px;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .otp-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .otp-input-group input {
+        width: 100%;
+        padding: 15px 15px;
+        font-size: 20px;
+        border: 2px solid #0648ff;
+        border-radius: 6px;
+        color: #0648ff;
+        text-align: center;
+        letter-spacing: 8px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+      }
+
+      .otp-input-group input:focus {
+        outline: none;
+        border-color: #0144f9;
+        box-shadow: 0 0 15px rgba(1, 68, 249, 0.3);
+      }
+
+      .otp-input-group button {
+        width: 100%;
+        padding: 12px 15px;
+        background: #0648ff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s;
+      }
+
+      .otp-input-group button:hover {
+        background: #0144f9;
+        transform: translateY(-2px);
+      }
+
+      .otp-input-group button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .otp-timer {
+        font-size: 12px;
+        color: #666;
+        margin-top: 8px;
+      }
+
+      .otp-timer.warning {
+        color: #d32f2f;
+        font-weight: 600;
+      }
+
+      .verify-otp-btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #22b14c 0%, #1a8a39 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 12px rgba(34, 177, 76, 0.3);
+      }
+
+      .verify-otp-btn:hover {
+        background: linear-gradient(135deg, #1a8a39 0%, #146a31 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(34, 177, 76, 0.4);
+      }
+
+      .verify-otp-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      /* Hidden form */
+      .form-section {
+        display: none;
+      }
+
+      .form-section.active {
+        display: block;
+      }
+
+      .otp-success {
+        display: none;
+        background: #c8e6c9;
+        color: #2e7d32;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        border: 2px solid #4caf50;
+      }
+
+      .otp-success.active {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="signup-container">
+      <h1>📋 Member Signup</h1>
+      <p>Create your account to access hospital services</p>
+
+      <div class="success-msg" id="successMsg">
+        Account created successfully! Redirecting to login...
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+
+      <form id="signupForm" onsubmit="handleSignup(event)">
+        <!-- OTP Verification Section -->
+        <div class="otp-section" id="otpSection">
+          <h3>📧 Email Verification</h3>
+
+          <!-- Email Input -->
+          <div class="form-group">
+            <label for="emailOtp">Email Address *</label>
+            <input
+              type="email"
+              id="emailOtp"
+              placeholder="Enter your email to receive OTP"
+              required
+            />
+          </div>
+
+          <!-- Send OTP Button -->
+          <button type="button" class="verify-otp-btn" id="sendOtpBtn" onclick="sendOtp()">
+            📤 Send OTP
+          </button>
+
+          <!-- OTP Input -->
+          <div class="form-group" id="otpInputGroup" style="display: none">
+            <label for="otp">📬 Enter OTP *</label>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px">
+              Alert में से OTP copy करके नीचे डालें:
+            </p>
+            <div class="otp-input-group">
+              <input
+                type="text"
+                id="otp"
+                placeholder="0 0 0 0 0 0"
+                maxlength="6"
+                pattern="[0-9]{6}"
+                inputmode="numeric"
+              />
+              <button type="button" id="resendBtn" onclick="sendOtp()">🔄 Resend OTP</button>
+            </div>
+            <div class="otp-timer" id="otpTimer"></div>
+          </div>
+
+          <!-- Verify OTP Button -->
+          <button
+            type="button"
+            class="verify-otp-btn"
+            id="verifyOtpBtn"
+            onclick="verifyOtp()"
+            style="display: none"
+          >
+            ✓ Verify OTP
+          </button>
+
+          <!-- OTP Success Message -->
+          <div class="otp-success" id="otpSuccess">
+            ✅ Email verified successfully! You can now proceed with registration.
+          </div>
+        </div>
+
+        <!-- Main Registration Form (Hidden until OTP verified) -->
+        <div class="form-section" id="formSection">
+          <!-- Name -->
+          <div class="form-group">
+            <label for="fullname">Full Name *</label>
+            <input type="text" id="fullname" placeholder="Enter your full name" required />
+          </div>
+
+          <!-- Email (pre-filled from OTP) -->
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input
+              type="email"
+              id="email"
+              placeholder="Email verified"
+              readonly
+              style="background: #f0f0f0; cursor: not-allowed"
+            />
+          </div>
+
+          <!-- Phone -->
+          <div class="form-group">
+            <label for="phone">Phone Number *</label>
+            <input type="tel" id="phone" placeholder="Enter your phone number" required />
+          </div>
+
+          <!-- Age and Gender -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="age">Age *</label>
+              <input type="text" id="age" placeholder="Enter your age" required />
+            </div>
+            <div class="form-group">
+              <label for="gender">Gender *</label>
+              <select id="gender" required>
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="form-group">
+            <label for="address">Address</label>
+            <input type="text" id="address" placeholder="Enter your address" />
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="password">Password *</label>
+            <input
+              type="password"
+              id="password"
+              placeholder="Enter a strong password"
+              required
+              minlength="6"
+            />
+            <div class="password-info">ℹ️ Password must be at least 6 characters long</div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="form-group">
+            <label for="confirmPassword">Confirm Password *</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              placeholder="Re-enter your password"
+              required
+              minlength="6"
+            />
+          </div>
+
+          <!-- Buttons -->
+          <div class="btn-group">
+            <button type="submit" class="btn-signup">Signup</button>
+            <button type="reset" class="btn-login">Clear</button>
+          </div>
+
+          <!-- Login Link -->
+          <div class="login-link">Already have an account? <a href="login.html">Login here</a></div>
+        </div>
+        <!-- End formSection -->
+      </form>
+    </div>
+
+    <script>
+      // OTP Variables
+      let generatedOtp = '';
+      let otpTimer = null;
+      let otpTimeLeft = 0;
+      const OTP_VALIDITY = 300; // 5 minutes
+
+      // Generate random OTP
+      function generateOtp() {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+      }
+
+      // Send OTP function
+      function sendOtp() {
+        const emailInput = document.getElementById('emailOtp');
+        const email = emailInput.value.trim();
+        const errorMsg = document.getElementById('errorMsg');
+
+        // Validate email
+        if (!email) {
+          errorMsg.textContent = '❌ Please enter your email address!';
+          errorMsg.style.display = 'block';
+          return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          errorMsg.textContent = '❌ Please enter a valid email address!';
+          errorMsg.style.display = 'block';
+          return;
+        }
+
+        errorMsg.style.display = 'none';
+
+        // Generate OTP
+        generatedOtp = generateOtp();
+        otpTimeLeft = OTP_VALIDITY;
+
+        // Show OTP input section
+        document.getElementById('otpInputGroup').style.display = 'block';
+        document.getElementById('verifyOtpBtn').style.display = 'block';
+        document.getElementById('sendOtpBtn').disabled = true;
+
+        // Disable email input
+        emailInput.disabled = true;
+
+        // Display OTP (in a real app, this would be sent via email)
+        showOtpNotification(email, generatedOtp);
+
+        // Start timer
+        startOtpTimer();
+      }
+
+      // Display OTP notification
+      function showOtpNotification(email, otp) {
+        const otpMessage = `
+========================================
+📧 OTP आपके Email पर भेज दिया गया है!
+========================================
+
+Email: ${email}
+
+🔐 आपका OTP है:
+
+    >>> ${otp} <<<
+
+⏱️ यह OTP 5 मिनट के लिए valid है।
+
+⚠️ नोट: 
+यह एक test version है। Real application में OTP आपके email पर automatically भेजा जाएगा।
+
+👉 अब OTP को form में डालकर Verify करें।
+========================================
+        `;
+        alert(otpMessage);
+      }
+
+      // Start OTP timer
+      function startOtpTimer() {
+        const timerElement = document.getElementById('otpTimer');
+
+        // Clear existing timer
+        if (otpTimer) {
+          clearInterval(otpTimer);
+        }
+
+        otpTimer = setInterval(() => {
+          otpTimeLeft--;
+          const minutes = Math.floor(otpTimeLeft / 60);
+          const seconds = otpTimeLeft % 60;
+
+          timerElement.textContent = `⏱️ OTP expires in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+          if (otpTimeLeft <= 30) {
+            timerElement.classList.add('warning');
+          }
+
+          if (otpTimeLeft <= 0) {
+            clearInterval(otpTimer);
+            timerElement.textContent = '❌ OTP has expired. Please send a new OTP.';
+            document.getElementById('otp').disabled = true;
+            document.getElementById('verifyOtpBtn').disabled = true;
+          }
+        }, 1000);
+      }
+
+      // Verify OTP
+      function verifyOtp() {
+        const otpInput = document.getElementById('otp').value.trim();
+        const errorMsg = document.getElementById('errorMsg');
+
+        if (!otpInput) {
+          errorMsg.textContent = '❌ Please enter the OTP!';
+          errorMsg.style.display = 'block';
+          return;
+        }
+
+        if (otpInput.length !== 6) {
+          errorMsg.textContent = '❌ OTP must be 6 digits!';
+          errorMsg.style.display = 'block';
+          return;
+        }
+
+        if (otpInput !== generatedOtp) {
+          errorMsg.textContent = '❌ OTP is incorrect! Please try again.';
+          errorMsg.style.display = 'block';
+          return;
+        }
+
+        if (otpTimeLeft <= 0) {
+          errorMsg.textContent = '❌ OTP has expired! Please send a new OTP.';
+          errorMsg.style.display = 'block';
+          return;
+        }
+
+        // OTP verified successfully
+        errorMsg.style.display = 'none';
+        document.getElementById('otpSuccess').classList.add('active');
+
+        // Fill email field
+        document.getElementById('email').value = document.getElementById('emailOtp').value;
+
+        // Hide OTP section and show form
+        document.getElementById('otpSection').style.display = 'none';
+        document.getElementById('formSection').classList.add('active');
+
+        // Clear OTP timer
+        clearInterval(otpTimer);
+      }
+
+      // Handle Signup form submission
+      function handleSignup(event) {
+        event.preventDefault();
+
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+
+        // Clear previous messages
+        errorMsg.style.display = 'none';
+        successMsg.style.display = 'none';
+
+        // Validate passwords match
+        if (password !== confirmPassword) {
+          errorMsg.textContent = '❌ Passwords do not match!';
+          errorMsg.style.display = 'block';
+          return;
+        }
+
+        // Validate password length
+        if (password.length < 6) {
+          errorMsg.textContent = '❌ Password must be at least 6 characters long!';
+          errorMsg.style.display = 'block';
+          return;
+        }
+
+        // All validations passed
+        const formData = {
+          fullname: document.getElementById('fullname').value,
+          email: document.getElementById('email').value,
+          phone: document.getElementById('phone').value,
+          age: document.getElementById('age').value,
+          gender: document.getElementById('gender').value,
+          address: document.getElementById('address').value,
+        };
+
+        // Save to localStorage (in a real app, this would be sent to a server)
+        const members = JSON.parse(localStorage.getItem('members')) || [];
+        members.push(formData);
+        localStorage.setItem('members', JSON.stringify(members));
+
+        // Show success message and redirect
+        successMsg.style.display = 'block';
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
+      }
+    </script>
+  </body>
+</html>

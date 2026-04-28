@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <style>
+    /* General body styling */
+    body {
+        font-family: Arial, sans-serif;
+        background: lightskyblue;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    /* Form container */
+    form {
+        background: honeydew;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 4px 30px #0144f9;
+        width: 350px;
+        text-align: center;
+    }
+
+    /* Input box container */
+    .input-box {
+        margin-bottom: 20px;
+    }
+
+    /* Labels */
+    label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    /* Input fields */
+    input[type="email"],
+    input[type="password"] {
+        width: 50%;
+        padding: 12px 15px;
+        margin-top: 5px;
+        color: #0648ff ;
+        border: 1px solid #0648ff;
+        border-radius: 6px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    input[type="email"]:hover,
+    input[type="password"]:hover{
+          transition:0.7s ease; 
+          width:100%;}
+    /* Button */
+    button {
+        width: 100%;
+        padding: 12px;
+        background-color: #45688d;
+        color: white;
+        box-shadow: 3px 10px 10px rgb(4, 228, 248);
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.3s;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background-color: #097bf5;
+    }
+  </style>
+</head>
+<body>
+  <form action="home.html">
+    <!-- Email -->
+    <div class="input-box">
+      <label for="email">Email</label><br>
+      <input type="email" id="email" placeholder="Enter your email" required>
+    </div>
+
+    <!-- Password -->
+    <div class="input-box">
+      <label for="password">Password</label><br>
+      <input type="password" id="password" placeholder="Enter your password" required>
+    </div>
+
+    <!-- Login Button -->
+    <div>
+      <button type="submit">Login</button>
+    </div>
+  </form>
+</body>
+</html>

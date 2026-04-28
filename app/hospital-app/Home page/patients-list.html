@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patients Management</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header h1 {
+        font-size: 28px;
+      }
+
+      .btn {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: all 0.3s;
+      }
+
+      .btn-primary {
+        background: white;
+        color: #667eea;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .content {
+        padding: 30px;
+      }
+
+      .search-bar {
+        margin-bottom: 30px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+      }
+
+      .search-bar input {
+        flex: 1;
+        padding: 12px 20px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+      }
+
+      .search-bar input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .filter-btns {
+        display: flex;
+        gap: 10px;
+      }
+
+      .filter-btns button {
+        padding: 10px 20px;
+        border: 2px solid #ddd;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .filter-btns button.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      thead {
+        background: #f5f5f5;
+      }
+
+      th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        color: #333;
+        border-bottom: 2px solid #ddd;
+      }
+
+      td {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+      }
+
+      tr:hover {
+        background: #f9f9f9;
+      }
+
+      .status-badge {
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .status-active {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+
+      .status-discharged {
+        background: #fff3e0;
+        color: #e65100;
+      }
+
+      .status-deceased {
+        background: #ffebee;
+        color: #c62828;
+      }
+
+      .action-btns {
+        display: flex;
+        gap: 10px;
+      }
+
+      .btn-sm {
+        padding: 8px 15px;
+        font-size: 14px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .btn-edit {
+        background: #4caf50;
+        color: white;
+      }
+
+      .btn-edit:hover {
+        background: #45a049;
+      }
+
+      .btn-view {
+        background: #2196f3;
+        color: white;
+      }
+
+      .btn-view:hover {
+        background: #0b7dda;
+      }
+
+      .btn-delete {
+        background: #f44336;
+        color: white;
+      }
+
+      .btn-delete:hover {
+        background: #da190b;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+      }
+
+      .empty-state h3 {
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #667eea;
+      }
+
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .modal.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 15px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #ddd;
+      }
+
+      .modal-header h3 {
+        margin: 0;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 28px;
+        color: white;
+        cursor: pointer;
+      }
+
+      .modal-body {
+        padding: 30px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        font-family: inherit;
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .modal-footer {
+        padding: 20px 30px;
+        border-top: 2px solid #ddd;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      .modal-footer button {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+
+      .btn-save {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-save:hover {
+        background: #5568d3;
+      }
+
+      .btn-cancel {
+        background: #ddd;
+        color: #333;
+      }
+
+      .btn-cancel:hover {
+        background: #ccc;
+      }
+
+      .alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .alert-success {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-left: 4px solid #2e7d32;
+      }
+
+      .alert-error {
+        background: #ffebee;
+        color: #c62828;
+        border-left: 4px solid #c62828;
+      }
+
+      .alert.show {
+        display: block;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .checkbox-group input[type='checkbox'] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+      }
+
+      .checkbox-group label {
+        margin: 0;
+        cursor: pointer;
+      }
+
+      .info-section {
+        background: #f5f5f5;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .info-section h4 {
+        margin-bottom: 10px;
+        color: #333;
+      }
+
+      .info-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .info-row:last-child {
+        margin-bottom: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>👥 Patients Management</h1>
+        <button class="btn btn-primary" id="addPatientBtn">+ Add Patient</button>
+      </div>
+
+      <div class="content">
+        <div class="alert alert-success" id="successAlert"></div>
+        <div class="alert alert-error" id="errorAlert"></div>
+
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="🔍 Search by name, ID, or disease..." />
+          <div class="filter-btns">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="Active">Active</button>
+            <button class="filter-btn" data-filter="Discharged">Discharged</button>
+            <button class="filter-btn" data-filter="Deceased">Deceased</button>
+          </div>
+        </div>
+
+        <div id="loadingMsg" class="loading" style="display: none">Loading patients...</div>
+
+        <div class="table-wrapper">
+          <table id="patientsTable">
+            <thead>
+              <tr>
+                <th>Patient ID</th>
+                <th>Name</th>
+                <th>ID Proof</th>
+                <th>Disease</th>
+                <th>Status</th>
+                <th>Deposit</th>
+                <th>Ambulance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none">
+          <h3>📋 No patients found</h3>
+          <p>Click "+ Add Patient" to add a new patient to the system</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add/Edit Patient Modal -->
+    <div class="modal" id="patientModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modalTitle">Add New Patient</h3>
+          <button class="close-btn" id="closeModal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <form id="patientForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="patientName">Patient Name *</label>
+                <input type="text" id="patientName" required />
+              </div>
+
+              <div class="form-group">
+                <label for="patientGender">Gender *</label>
+                <select id="patientGender" required>
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="idProof">ID Proof Type *</label>
+                <select id="idProof" required>
+                  <option value="">Select ID Proof</option>
+                  <option value="aadhar">Aadhar Card</option>
+                  <option value="pan">PAN Card</option>
+                  <option value="voter">Voter ID</option>
+                  <option value="driving">Driving License</option>
+                  <option value="passport">Passport</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="idNumber">ID Number *</label>
+                <input type="text" id="idNumber" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="disease">Disease/Condition</label>
+              <input type="text" id="disease" placeholder="Enter disease or medical condition" />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="deposit">Deposit Amount ($)</label>
+                <input type="number" id="deposit" step="0.01" placeholder="0.00" />
+              </div>
+
+              <div class="form-group">
+                <label for="status">Status *</label>
+                <select id="status" required>
+                  <option value="Active">Active</option>
+                  <option value="Discharged">Discharged</option>
+                  <option value="Deceased">Deceased</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="checkbox-group">
+              <input type="checkbox" id="ambulanceRequired" />
+              <label for="ambulanceRequired">Ambulance Required</label>
+            </div>
+
+            <div class="form-group" id="dischargeDateGroup" style="display: none">
+              <label for="dischargeDate">Discharge Date</label>
+              <input type="date" id="dischargeDate" />
+            </div>
+
+            <div class="info-section" id="infoSection" style="display: none">
+              <h4>Patient Information</h4>
+              <div class="info-row">
+                <div>
+                  <strong>Admission Date:</strong>
+                  <p id="infoAdmissionDate">-</p>
+                </div>
+                <div>
+                  <strong>Days Admitted:</strong>
+                  <p id="infoDaysAdmitted">-</p>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+          <button type="submit" form="patientForm" class="btn-save">Save Patient</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Patient Details Modal -->
+    <div class="modal" id="viewModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Patient Details</h3>
+          <button class="close-btn" id="closeViewModal">&times;</button>
+        </div>
+
+        <div class="modal-body" id="viewModalBody"></div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" id="closeViewBtn">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = 'http://localhost:5000/api';
+      let allPatients = [];
+      let editingPatientId = null;
+      let currentFilter = 'all';
+      let currentSearch = '';
+
+      // DOM Elements
+      const addPatientBtn = document.getElementById('addPatientBtn');
+      const patientModal = document.getElementById('patientModal');
+      const viewModal = document.getElementById('viewModal');
+      const closeModal = document.getElementById('closeModal');
+      const closeViewModal = document.getElementById('closeViewModal');
+      const cancelBtn = document.getElementById('cancelBtn');
+      const closeViewBtn = document.getElementById('closeViewBtn');
+      const patientForm = document.getElementById('patientForm');
+      const tableBody = document.getElementById('tableBody');
+      const loadingMsg = document.getElementById('loadingMsg');
+      const emptyState = document.getElementById('emptyState');
+      const statusSelect = document.getElementById('status');
+      const dischargeDateGroup = document.getElementById('dischargeDateGroup');
+      const searchInput = document.getElementById('searchInput');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      const successAlert = document.getElementById('successAlert');
+      const errorAlert = document.getElementById('errorAlert');
+
+      // Event Listeners
+      window.addEventListener('DOMContentLoaded', loadPatients);
+      addPatientBtn.addEventListener('click', () => openModal());
+      closeModal.addEventListener('click', closePatientModal);
+      closeViewModal.addEventListener('click', closeViewPatientModal);
+      cancelBtn.addEventListener('click', closePatientModal);
+      closeViewBtn.addEventListener('click', closeViewPatientModal);
+      patientModal.addEventListener('click', (e) => {
+        if (e.target === patientModal) closePatientModal();
+      });
+      viewModal.addEventListener('click', (e) => {
+        if (e.target === viewModal) closeViewPatientModal();
+      });
+      patientForm.addEventListener('submit', savePatient);
+      statusSelect.addEventListener('change', toggleDischargeDate);
+      searchInput.addEventListener('input', filterPatients);
+      filterBtns.forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          filterBtns.forEach((b) => b.classList.remove('active'));
+          e.target.classList.add('active');
+          currentFilter = e.target.dataset.filter;
+          filterPatients();
+        });
+      });
+
+      // Load patients from database
+      async function loadPatients() {
+        loadingMsg.style.display = 'block';
+        tableBody.innerHTML = '';
+
+        try {
+          const response = await fetch(`${API_URL}/patients`);
+          if (!response.ok) throw new Error('Failed to load patients');
+
+          allPatients = await response.json();
+          loadingMsg.style.display = 'none';
+
+          if (allPatients.length === 0) {
+            showEmptyState();
+          } else {
+            filterPatients();
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          loadingMsg.style.display = 'none';
+          showError('Failed to load patients. Make sure backend is running.');
+          showEmptyState();
+        }
+      }
+
+      // Filter and display patients
+      function filterPatients() {
+        emptyState.style.display = 'none';
+        const searchTerm = searchInput.value.toLowerCase();
+
+        let filtered = allPatients.filter((patient) => {
+          const matchesSearch =
+            patient.name.toLowerCase().includes(searchTerm) ||
+            patient.id_number.includes(searchTerm) ||
+            (patient.disease && patient.disease.toLowerCase().includes(searchTerm));
+
+          const matchesFilter = currentFilter === 'all' || patient.status === currentFilter;
+
+          return matchesSearch && matchesFilter;
+        });
+
+        if (filtered.length === 0) {
+          showEmptyState();
+        } else {
+          displayPatients(filtered);
+        }
+      }
+
+      // Display patients in table
+      function displayPatients(patients) {
+        tableBody.innerHTML = '';
+
+        patients.forEach((patient) => {
+          const row = document.createElement('tr');
+          const admissionDate = new Date(patient.admission_date);
+          const daysAdmitted = Math.floor((new Date() - admissionDate) / (1000 * 60 * 60 * 24));
+
+          row.innerHTML = `
+          <td>#${patient.id}</td>
+          <td><strong>${patient.name}</strong></td>
+          <td>${patient.id_proof.toUpperCase()}</td>
+          <td>${patient.disease || '-'}</td>
+          <td><span class="status-badge status-${patient.status.toLowerCase()}">${
+            patient.status
+          }</span></td>
+          <td>$${parseFloat(patient.deposit).toFixed(2)}</td>
+          <td>${patient.ambulance_required ? '✅ Yes' : '❌ No'}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-sm btn-view" onclick="viewPatient(${patient.id})">View</button>
+              <button class="btn-sm btn-edit" onclick="editPatient(${patient.id})">Edit</button>
+              <button class="btn-sm btn-delete" onclick="deletePatient(${
+                patient.id
+              })">Delete</button>
+            </div>
+          </td>
+        `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Show empty state
+      function showEmptyState() {
+        tableBody.innerHTML = '';
+        emptyState.style.display = 'block';
+      }
+
+      // Open modal for adding/editing
+      function openModal(patientId = null) {
+        editingPatientId = patientId;
+
+        if (patientId) {
+          const patient = allPatients.find((p) => p.id === patientId);
+          if (patient) {
+            document.getElementById('modalTitle').textContent = 'Edit Patient';
+            document.getElementById('patientName').value = patient.name;
+            document.getElementById('patientGender').value = patient.gender;
+            document.getElementById('idProof').value = patient.id_proof;
+            document.getElementById('idNumber').value = patient.id_number;
+            document.getElementById('disease').value = patient.disease || '';
+            document.getElementById('deposit').value = patient.deposit || '';
+            document.getElementById('status').value = patient.status;
+            document.getElementById('ambulanceRequired').checked = patient.ambulance_required;
+            document.getElementById('dischargeDate').value = patient.discharge_date
+              ? patient.discharge_date.split('T')[0]
+              : '';
+
+            // Show info section
+            const admissionDate = new Date(patient.admission_date);
+            const daysAdmitted = Math.floor((new Date() - admissionDate) / (1000 * 60 * 60 * 24));
+            document.getElementById('infoAdmissionDate').textContent =
+              admissionDate.toLocaleDateString();
+            document.getElementById('infoDaysAdmitted').textContent = daysAdmitted + ' days';
+            document.getElementById('infoSection').style.display = 'block';
+
+            if (patient.status === 'Discharged') {
+              document.getElementById('dischargeDateGroup').style.display = 'block';
+            }
+          }
+        } else {
+          document.getElementById('modalTitle').textContent = 'Add New Patient';
+          patientForm.reset();
+          document.getElementById('infoSection').style.display = 'none';
+          document.getElementById('dischargeDateGroup').style.display = 'none';
+        }
+
+        patientModal.classList.add('active');
+      }
+
+      // Close patient modal
+      function closePatientModal() {
+        patientModal.classList.remove('active');
+        patientForm.reset();
+        editingPatientId = null;
+        document.getElementById('infoSection').style.display = 'none';
+        document.getElementById('dischargeDateGroup').style.display = 'none';
+      }
+
+      // Toggle discharge date field
+      function toggleDischargeDate() {
+        if (statusSelect.value === 'Discharged') {
+          document.getElementById('dischargeDateGroup').style.display = 'block';
+        } else {
+          document.getElementById('dischargeDateGroup').style.display = 'none';
+        }
+      }
+
+      // Save patient (add or edit)
+      async function savePatient(e) {
+        e.preventDefault();
+
+        const name = document.getElementById('patientName').value.trim();
+        const gender = document.getElementById('patientGender').value;
+        const idProof = document.getElementById('idProof').value;
+        const idNumber = document.getElementById('idNumber').value.trim();
+        const disease = document.getElementById('disease').value.trim();
+        const deposit = document.getElementById('deposit').value;
+        const status = document.getElementById('status').value;
+        const ambulanceRequired = document.getElementById('ambulanceRequired').checked ? 1 : 0;
+        const dischargeDate = document.getElementById('dischargeDate').value;
+
+        if (!name || !gender || !idProof || !idNumber || !status) {
+          showError('Please fill in all required fields');
+          return;
+        }
+
+        const patientData = {
+          name,
+          gender,
+          id_proof: idProof,
+          id_number: idNumber,
+          disease: disease || null,
+          deposit: deposit ? parseFloat(deposit) : 0,
+          status,
+          ambulance_required: ambulanceRequired,
+          discharge_date: status === 'Discharged' ? dischargeDate : null,
+        };
+
+        try {
+          const method = editingPatientId ? 'PUT' : 'POST';
+          const endpoint = editingPatientId ? `/patients/${editingPatientId}` : '/patients';
+
+          const response = await fetch(`${API_URL}${endpoint}`, {
+            method,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(patientData),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to save patient');
+          }
+
+          showSuccess(
+            editingPatientId ? '✅ Patient updated successfully!' : '✅ Patient added successfully!'
+          );
+          closePatientModal();
+          loadPatients();
+        } catch (error) {
+          console.error('Error:', error);
+          showError(`Failed to save patient: ${error.message}`);
+        }
+      }
+
+      // View patient details
+      async function viewPatient(patientId) {
+        const patient = allPatients.find((p) => p.id === patientId);
+        if (!patient) return;
+
+        const admissionDate = new Date(patient.admission_date);
+        const daysAdmitted = Math.floor((new Date() - admissionDate) / (1000 * 60 * 60 * 24));
+
+        let html = `
+        <div class="info-section">
+          <h4>Basic Information</h4>
+          <div class="info-row">
+            <div><strong>Patient ID:</strong> #${patient.id}</div>
+            <div><strong>Status:</strong> <span class="status-badge status-${patient.status.toLowerCase()}">${
+          patient.status
+        }</span></div>
+          </div>
+          <div class="info-row">
+            <div><strong>Name:</strong> ${patient.name}</div>
+            <div><strong>Gender:</strong> ${patient.gender}</div>
+          </div>
+          <div class="info-row">
+            <div><strong>ID Proof:</strong> ${patient.id_proof.toUpperCase()}</div>
+            <div><strong>ID Number:</strong> ${patient.id_number}</div>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h4>Medical Information</h4>
+          <div class="info-row">
+            <div><strong>Disease/Condition:</strong> ${patient.disease || 'N/A'}</div>
+            <div><strong>Ambulance Required:</strong> ${
+              patient.ambulance_required ? '✅ Yes' : '❌ No'
+            }</div>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h4>Financial & Admission</h4>
+          <div class="info-row">
+            <div><strong>Deposit:</strong> $${parseFloat(patient.deposit).toFixed(2)}</div>
+            <div><strong>Days Admitted:</strong> ${daysAdmitted} days</div>
+          </div>
+          <div class="info-row">
+            <div><strong>Admission Date:</strong> ${admissionDate.toLocaleDateString()}</div>
+            <div><strong>Admission Time:</strong> ${admissionDate.toLocaleTimeString()}</div>
+          </div>
+      `;
+
+        if (patient.status === 'Discharged' && patient.discharge_date) {
+          const dischargeDate = new Date(patient.discharge_date);
+          html += `
+          <div class="info-row">
+            <div><strong>Discharge Date:</strong> ${dischargeDate.toLocaleDateString()}</div>
+          </div>
+        `;
+        }
+        html += '</div>';
+
+        // --- PRESCRIBED MEDICINES ---
+        try {
+          const prescRes = await fetch(`${API_URL}/prescriptions/patient/${patientId}`);
+          if (prescRes.ok) {
+            const patientMeds = await prescRes.json();
+            
+            if (patientMeds.length > 0) {
+              html += `<div class="info-section">
+                <h4>Prescribed Medicines</h4>
+                <div class="table-wrapper" style="margin-top:10px;">
+                  <table style="font-size:13px; margin-top:0;">
+                    <thead style="background:#f1f5f9;">
+                      <tr><th>Date</th><th>Medicine Name</th><th>Qty</th><th>Notes</th></tr>
+                    </thead>
+                    <tbody>
+                      ${patientMeds.map(m => `
+                        <tr>
+                          <td>${new Date(m.prescribed_at).toLocaleDateString()}</td>
+                          <td><strong>${m.medicine_name}</strong></td>
+                          <td>${m.quantity}</td>
+                          <td style="color:#64748b;">${m.notes || '-'}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>`;
+            } else {
+              html += `<div class="info-section">
+                <h4>Prescribed Medicines</h4>
+                <div style="color:#94a3b8; font-size:13px; padding:10px 0;">No medicines prescribed yet.</div>
+              </div>`;
+            }
+          }
+        } catch (err) {
+          console.error("Failed to load prescriptions:", err);
+          html += `<div class="info-section">
+            <h4>Prescribed Medicines</h4>
+            <div style="color:#ef4444; font-size:13px; padding:10px 0;">Failed to load medicines.</div>
+          </div>`;
+        }
+
+        document.getElementById('viewModalBody').innerHTML = html;
+        viewModal.classList.add('active');
+      }
+
+      // Close view modal
+      function closeViewPatientModal() {
+        viewModal.classList.remove('active');
+      }
+
+      // Edit patient
+      function editPatient(patientId) {
+        openModal(patientId);
+      }
+
+      // Delete patient
+      async function deletePatient(patientId) {
+        if (
+          !confirm('Are you sure you want to delete this patient? This action cannot be undone.')
+        ) {
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/patients/${patientId}`, {
+            method: 'DELETE',
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to delete patient');
+          }
+
+          showSuccess('✅ Patient deleted successfully!');
+          loadPatients();
+        } catch (error) {
+          console.error('Error:', error);
+          showError(`Failed to delete patient: ${error.message}`);
+        }
+      }
+
+      // Show success message
+      function showSuccess(msg) {
+        successAlert.textContent = msg;
+        successAlert.classList.add('show');
+        errorAlert.classList.remove('show');
+        setTimeout(() => successAlert.classList.remove('show'), 4000);
+      }
+
+      // Show error message
+      function showError(msg) {
+        errorAlert.textContent = msg;
+        errorAlert.classList.add('show');
+        successAlert.classList.remove('show');
+        setTimeout(() => errorAlert.classList.remove('show'), 4000);
+      }
+    </script>
+  </body>
+</html>

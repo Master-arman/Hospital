@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hospital Billing & Invoicing</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+      :root {
+        --primary-color: rgb(108, 3, 246);
+        --primary-hover: rgb(146, 71, 245);
+        --secondary-color: #059669;
+        --warning-color: #eab308;
+        --danger-color: #ef4444;
+        --text-color: #1a1a2e;
+        --text-light: #64748b;
+        --bg-color: #dff0fa;
+        --card-bg: #ffffff;
+        --card-border: rgba(108, 3, 246, 0.15);
+        --input-bg: #f8fafc;
+        --input-border: #cbd5e1;
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+      }
+
+      body.dark-mode {
+        --primary-color: #a78bfa;
+        --primary-hover: #c4b5fd;
+        --secondary-color: #10b981;
+        --warning-color: #facc15;
+        --text-color: #e2e8f0;
+        --text-light: #94a3b8;
+        --bg-color: #0f0f1a;
+        --card-bg: #1e1e35;
+        --card-border: rgba(167, 139, 250, 0.2);
+        --input-bg: #2a2a40;
+        --input-border: #3f3f5a;
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.4);
+        --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5);
+        --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.6);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .header {
+        background: var(--card-bg);
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: var(--shadow-sm);
+        border-bottom: 1px solid var(--card-border);
+      }
+
+      .header h1 {
+        font-size: 24px;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: white;
+      }
+
+      .btn-primary { background: linear-gradient(135deg, var(--primary-color), var(--primary-hover)); }
+      .btn-primary:hover { box-shadow: 0 4px 12px rgba(108,3,246,0.3); transform: translateY(-1px); }
+      .btn-outline { background: transparent; border: 1.5px solid var(--primary-color); color: var(--primary-color); }
+      .btn-outline:hover { background: var(--primary-color); color: white; }
+      .btn-success { background: linear-gradient(135deg, #059669, #10b981); }
+      .btn-danger { background: linear-gradient(135deg, #dc2626, #ef4444); }
+
+      .container {
+        padding: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+        gap: 24px;
+      }
+
+      /* Dashboard Metrics */
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+      .metric-card {
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid var(--card-border);
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .metric-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        background: rgba(108, 3, 246, 0.1);
+        color: var(--primary-color);
+      }
+      .metric-info h3 { font-size: 14px; color: var(--text-light); font-weight: 500; }
+      .metric-info p { font-size: 24px; font-weight: 700; margin-top: 4px; }
+
+      /* Main Layout */
+      .billing-layout {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 24px;
+      }
+      @media (max-width: 1024px) {
+        .billing-layout { grid-template-columns: 1fr; }
+      }
+
+      .card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--card-border);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+      }
+      .card-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--card-border);
+        background: rgba(0,0,0,0.02);
+      }
+      .card-header h2 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+      .card-body { padding: 20px; }
+
+      /* Form Elements */
+      .form-group { margin-bottom: 16px; }
+      .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-light);
+      }
+      .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--input-border);
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 14px;
+        outline: none;
+      }
+      .form-control:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(108,3,246,0.1); }
+      .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      
+      .input-group { display: flex; align-items: center; }
+      .input-group-text {
+        padding: 10px 14px;
+        background: rgba(0,0,0,0.05);
+        border: 1px solid var(--input-border);
+        border-right: none;
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+        color: var(--text-light);
+      }
+      .input-group .form-control { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+
+      .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .checkbox-wrapper input[type="checkbox"] {
+        width: 18px; height: 18px; accent-color: var(--primary-color);
+      }
+      .checkbox-wrapper label { margin: 0; cursor: pointer; color: var(--text-color); }
+
+      /* Invoice Preview Styling */
+      .invoice-container {
+        background: #fff;
+        color: #000;
+        padding: 30px;
+        border-radius: 0;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        min-height: 500px;
+        position: relative;
+        border: 1px solid #e2e8f0;
+      }
+      .invoice-header-row { display: flex; justify-content: space-between; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 20px; }
+      .invoice-hospital-details h3 { font-size: 22px; color: #1e293b; margin-bottom: 4px; }
+      .invoice-hospital-details p { font-size: 12px; color: #64748b; line-height: 1.4; }
+      .invoice-meta { text-align: right; }
+      .invoice-meta h2 { font-size: 28px; color: rgb(108, 3, 246); margin-bottom: 4px; font-weight: 800; letter-spacing: 1px;}
+      .invoice-patient-info { display: grid; gap: 10px; margin-bottom: 24px; background: #f8fafc; padding: 15px; border-radius: 8px; }
+      .invoice-patient-info div { display: flex; justify-content: space-between; font-size: 13px; }
+      
+      .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;}
+      .invoice-table th, .invoice-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+      .invoice-table th { background: #f8fafc; color: #475569; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;}
+      .invoice-table td.amount { text-align: right; font-weight: 500;}
+      .invoice-table th.amount { text-align: right; }
+      
+      .invoice-summary { width: 250px; margin-left: auto; font-size: 13px; }
+      .invoice-summary-row { display: flex; justify-content: space-between; padding: 6px 0; }
+      .invoice-summary-row.total { font-weight: 700; font-size: 18px; border-top: 2px solid #e2e8f0; padding-top: 10px; margin-top: 10px; color: rgb(108, 3, 246); }
+      
+      .invoice-footer-row { margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+      .invoice-qr-box { width: 100px; height: 100px; }
+      .invoice-qr-bg { padding: 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; display: inline-block; }
+      
+      /* Payment Action Area */
+      .payment-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+      
+      .status-badge {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+      .badge-paid { background: rgba(16, 185, 129, 0.15); color: #059669; }
+      body.dark-mode .badge-paid { color: #34d399; }
+      .badge-pending { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+      body.dark-mode .badge-pending { color: #fbbf24; }
+      
+      /* Transactions Table */
+      .table-responsive { overflow-x: auto; }
+      .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      .data-table th, .data-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--card-border); }
+      .data-table th { font-weight: 600; color: var(--text-light); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+      .data-table tbody tr:hover { background: rgba(108, 3, 246, 0.03); }
+
+      /* Payment overlay */
+      .payment-status-selector { margin-top: 15px; display: flex; align-items: center; gap: 10px; }
+      
+      /* Print Styles */
+      @media print {
+        body * { visibility: hidden; }
+        .invoice-container, .invoice-container * { visibility: visible; }
+        .invoice-container { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <h1>💳 Billing & Invoicing</h1>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-outline" onclick="window.history.back()">⬅️ Back to Home</button>
+        <button class="btn btn-outline" onclick="toggleDarkMode()">🌙 Dark Mode</button>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- Dashboard Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon">💰</div>
+          <div class="metric-info">
+            <h3>Total Revenue Today</h3>
+            <p id="metric-revenue">₹0.00</p>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="color: var(--warning-color); background: rgba(234, 179, 8, 0.1);">⏳</div>
+          <div class="metric-info">
+            <h3>Pending Payments</h3>
+            <p id="metric-pending">0</p>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="color: var(--secondary-color); background: rgba(16, 185, 129, 0.1);">📈</div>
+          <div class="metric-info">
+            <h3>Total Transactions</h3>
+            <p id="metric-tx-count">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Billing Split -->
+      <div class="billing-layout">
+        <!-- Left: Form -->
+        <div class="card form-panel">
+          <div class="card-header">
+            <h2>📝 New Bill Entry</h2>
+          </div>
+          <div class="card-body">
+            <h3 style="font-size: 14px; margin-bottom: 12px; color: var(--primary-color);">Patient Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Patient ID (Optional)</label>
+                <input type="text" id="patient-id" class="form-control" placeholder="e.g. PID-1002" oninput="updatePreview()">
+              </div>
+              <div class="form-group">
+                <label>Patient Name *</label>
+                <input type="text" id="patient-name" class="form-control" placeholder="John Doe" oninput="updatePreview()">
+              </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--card-border); margin: 20px 0;">
+
+            <h3 style="font-size: 14px; margin-bottom: 12px; color: var(--primary-color);">Charges</h3>
+            
+            <div class="form-group">
+              <label>Consultation Fee</label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                <input type="number" id="fee-consultation" class="form-control" value="0" min="0" oninput="updateCalculations()">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Medicine Cost</label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                <input type="number" id="fee-medicine" class="form-control" value="0" min="0" oninput="updateCalculations()">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Room Charges</label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                <input type="number" id="fee-room" class="form-control" value="0" min="0" oninput="updateCalculations()">
+              </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--card-border); margin: 20px 0;">
+
+            <h3 style="font-size: 14px; margin-bottom: 12px; color: var(--primary-color);">Adjustments</h3>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Discount (%)</label>
+                <input type="number" id="discount-percent" class="form-control" value="0" min="0" max="100" oninput="updateCalculations()">
+              </div>
+              <div class="form-group">
+                <label>Tax (GST %)</label>
+                <input type="number" id="tax-percent" class="form-control" value="18" min="0" oninput="updateCalculations()">
+              </div>
+            </div>
+
+            <div class="checkbox-wrapper">
+              <input type="checkbox" id="senior-citizen" onchange="applySeniorDiscount()">
+              <label for="senior-citizen">Apply Senior Citizen Discount (Extra 10% off)</label>
+            </div>
+
+            <div style="background: rgba(108,3,246,0.05); padding: 15px; border-radius: 8px; margin-top: 20px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600;">
+                <span>Total Amount Payable:</span>
+                <span id="form-total" style="color: var(--primary-color); font-size: 18px;">₹0.00</span>
+              </div>
+              <p style="font-size: 11px; color: var(--text-light);">(Calculated instantly below)</p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right: Invoice & Payment -->
+        <div>
+          <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <h2>🧾 Invoice Preview</h2>
+              <span class="status-badge badge-pending" id="invoice-status-badge">PENDING</span>
+            </div>
+            
+            <!-- Invoice DOM to turn to PDF -->
+            <div class="invoice-container" id="invoice-pdf-area">
+              <div class="invoice-header-row">
+                <div class="invoice-hospital-details">
+                  <h3>Hospital Management System</h3>
+                  <p>123 Health Avenue, Medical City, HC 40001<br>Phone: +91 98765 43210<br>Email: billing@hospital.com</p>
+                </div>
+                <div class="invoice-meta">
+                  <h2>INVOICE</h2>
+                  <p style="font-size: 12px; color: #64748b;">No: <span id="inv-no">INV-10001</span><br>Date: <span id="inv-date"></span></p>
+                </div>
+              </div>
+
+              <div class="invoice-patient-info">
+                <div><span><strong>Patient Name:</strong> <span id="inv-p-name">-</span></span> <span><strong>Patient ID:</strong> <span id="inv-p-id">-</span></span></div>
+              </div>
+
+              <table class="invoice-table">
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th class="amount">Amount (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Consultation Fee</td>
+                    <td class="amount" id="inv-item-consult">0.00</td>
+                  </tr>
+                  <tr>
+                    <td>Medicine Charges</td>
+                    <td class="amount" id="inv-item-med">0.00</td>
+                  </tr>
+                  <tr>
+                    <td>Room Charges</td>
+                    <td class="amount" id="inv-item-room">0.00</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="invoice-summary">
+                <div class="invoice-summary-row">
+                  <span>Subtotal:</span>
+                  <span id="inv-subtotal">0.00</span>
+                </div>
+                <div class="invoice-summary-row" style="color: #ef4444;">
+                  <span>Discount (<span id="inv-disc-perc">0</span>%):</span>
+                  <span id="inv-disc-amount">-0.00</span>
+                </div>
+                <div class="invoice-summary-row">
+                  <span>GST (<span id="inv-tax-perc">18</span>%):</span>
+                  <span id="inv-tax-amount">+0.00</span>
+                </div>
+                <div class="invoice-summary-row total">
+                  <span>Total (₹):</span>
+                  <span id="inv-total">0.00</span>
+                </div>
+              </div>
+
+              <div class="invoice-footer-row">
+                <div style="font-size: 11px; color: #64748b; max-width: 60%;">
+                  <p><strong>Terms & Conditions:</strong></p>
+                  <p>All bills are strictly payable in full. Medicines returned within 7 days in sealed condition will be refunded. Thank you for your trust.</p>
+                </div>
+                <!-- Dynamic QR -->
+                <div class="invoice-qr-bg" id="qr-container-pdf">
+                  <!-- QR gets injected here -->
+                </div>
+              </div>
+            </div>
+            
+            <div class="card-body" style="background: rgba(0,0,0,0.02); border-top: 1px solid var(--card-border);">
+              <div class="payment-status-selector">
+                <label style="font-size: 13px; font-weight: 600;">Payment Action:</label>
+                <select id="payment-status" class="form-control" style="width: auto;" onchange="updateBadge()">
+                  <option value="pending">Pending</option>
+                  <option value="paid">Mark as Paid</option>
+                </select>
+                <select id="payment-mode" class="form-control" style="width: auto;">
+                  <option value="UPI">UPI/QR</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                </select>
+              </div>
+
+              <div class="payment-actions">
+                <button class="btn btn-primary" onclick="saveTransaction()">💾 Save Transaction</button>
+                <button class="btn btn-success" onclick="generatePDF()">📥 Download PDF</button>
+                <button class="btn btn-outline" onclick="window.print()">🖨️ Print Direct</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transaction History -->
+      <div class="card" style="margin-top: 10px;">
+        <div class="card-header" style="display: flex; justify-content: space-between;">
+          <h2>📊 Recent Transactions</h2>
+          <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="clearHistory()">Clear History</button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="tx-table">
+            <thead>
+              <tr>
+                <th>Invoice No</th>
+                <th>Date & Time</th>
+                <th>Patient Name</th>
+                <th>Amount (₹)</th>
+                <th>Mode</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tx-body">
+              <!-- JS populates this -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize states
+      let darkMode = localStorage.getItem('darkMode') === 'enabled';
+      if(darkMode) document.body.classList.add('dark-mode');
+
+      function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', document.body.classList.contains('dark-mode') ? 'enabled' : 'disabled');
+      }
+
+      // Generate initial Invoice Number and Date
+      document.getElementById('inv-date').textContent = new Date().toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'});
+      document.getElementById('inv-no').textContent = "INV-" + Math.floor(10000 + Math.random() * 90000);
+
+      // Setup QR Code instance
+      let qrcode = new QRCode(document.getElementById("qr-container-pdf"), {
+        text: "upi://pay?pa=hospital@bank&pn=Hospital&am=0",
+        width: 80,
+        height: 80,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.L
+      });
+
+      // Form interactions
+      function applySeniorDiscount() {
+        const isSenior = document.getElementById('senior-citizen').checked;
+        const discountInput = document.getElementById('discount-percent');
+        let currentDisc = parseFloat(discountInput.value) || 0;
+        
+        if(isSenior) { discountInput.value = currentDisc + 10; } 
+        else { discountInput.value = Math.max(0, currentDisc - 10); }
+        
+        updateCalculations();
+      }
+
+      function updatePreview() {
+        document.getElementById('inv-p-name').textContent = document.getElementById('patient-name').value || '-';
+        document.getElementById('inv-p-id').textContent = document.getElementById('patient-id').value || '-';
+      }
+
+      function updateCalculations() {
+        // Retrieve values
+        const consult = parseFloat(document.getElementById('fee-consultation').value) || 0;
+        const med = parseFloat(document.getElementById('fee-medicine').value) || 0;
+        const room = parseFloat(document.getElementById('fee-room').value) || 0;
+        
+        let discountPerc = parseFloat(document.getElementById('discount-percent').value) || 0;
+        if(discountPerc > 100) discountPerc = 100;
+
+        let taxPerc = parseFloat(document.getElementById('tax-percent').value) || 0;
+
+        // Subtotal
+        const subtotal = consult + med + room;
+        
+        // Discount
+        const discountAmount = subtotal * (discountPerc / 100);
+        
+        // Post-discount amount
+        const preTaxAmount = subtotal - discountAmount;
+        
+        // Tax
+        const taxAmount = preTaxAmount * (taxPerc / 100);
+        
+        // Total
+        const total = preTaxAmount + taxAmount;
+
+        // Update UI logic
+        document.getElementById('inv-item-consult').textContent = consult.toFixed(2);
+        document.getElementById('inv-item-med').textContent = med.toFixed(2);
+        document.getElementById('inv-item-room').textContent = room.toFixed(2);
+        
+        document.getElementById('inv-subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('inv-disc-perc').textContent = discountPerc;
+        document.getElementById('inv-disc-amount').textContent = "-" + discountAmount.toFixed(2);
+        document.getElementById('inv-tax-perc').textContent = taxPerc;
+        document.getElementById('inv-tax-amount').textContent = "+" + taxAmount.toFixed(2);
+        
+        document.getElementById('inv-total').textContent = total.toFixed(2);
+        document.getElementById('form-total').textContent = "₹" + total.toFixed(2);
+
+        // Update QR Code
+        qrcode.clear();
+        qrcode.makeCode(`upi://pay?pa=hospital@bank&pn=Hospital&am=${total.toFixed(2)}&cu=INR`);
+      }
+
+      function updateBadge() {
+        const status = document.getElementById('payment-status').value;
+        const badge = document.getElementById('invoice-status-badge');
+        if(status === 'paid') {
+          badge.className = 'status-badge badge-paid';
+          badge.textContent = 'PAID';
+        } else {
+          badge.className = 'status-badge badge-pending';
+          badge.textContent = 'PENDING';
+        }
+      }
+
+      function generatePDF() {
+        const element = document.getElementById('invoice-pdf-area');
+        const invNo = document.getElementById('inv-no').textContent;
+        const opt = {
+          margin:       0.5,
+          filename:     `${invNo}.pdf`,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2 },
+          jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+      }
+
+      // TX History handling from DB
+      let transactions = [];
+
+      function saveTransaction() {
+        const pName = document.getElementById('patient-name').value;
+        if(!pName) { alert("Please provide a Patient Name"); return; }
+        
+        const total = document.getElementById('inv-total').textContent;
+        if(parseFloat(total) === 0) { alert("Bill amount is 0!"); return; }
+
+        const status = document.getElementById('payment-status').value;
+        const mode = document.getElementById('payment-mode').value;
+        const invNo = document.getElementById('inv-no').textContent;
+
+        const newTx = {
+          invoice_number: invNo,
+          patient_name: pName,
+          amount: parseFloat(total),
+          payment_mode: mode,
+          status: status
+        };
+
+        fetch('http://localhost:5000/api/billing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newTx)
+        })
+        .then(res => {
+          if (!res.ok) throw new Error("Failed to save transaction");
+          return res.json();
+        })
+        .then(data => {
+          alert(`Transaction ${status.toUpperCase()} Saved Successfully!`);
+          document.getElementById('inv-no').textContent = "INV-" + Math.floor(10000 + Math.random() * 90000);
+          loadTransactions();
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Error saving transaction. Check console.");
+        });
+      }
+
+      function loadTransactions() {
+        fetch('http://localhost:5000/api/billing')
+          .then(res => res.json())
+          .then(data => {
+            transactions = data;
+            renderTransactions();
+          })
+          .catch(err => {
+            console.error("Failed to load transactions", err);
+          });
+      }
+
+      function clearHistory() {
+        if(confirm("Clear all transactions? Action depends on backend implementation, skipping clearing true db rows for demo safety.")) {
+          // You may want to implement a DELETE /api/billing endpoint to truly clear it.
+          // For now, we will do nothing to protect DB records.
+        }
+      }
+
+      function renderTransactions() {
+        const tbody = document.getElementById('tx-body');
+        tbody.innerHTML = '';
+        
+        let totalRev = 0;
+        let pendingCnt = 0;
+
+        transactions.forEach(tx => {
+          // Normalize to parse float for DB decimal output strings
+          const txAmount = parseFloat(tx.amount);
+          
+          if(tx.status === 'paid') totalRev += txAmount;
+          if(tx.status === 'pending') pendingCnt++;
+
+          const tr = document.createElement('tr');
+          const badgeClass = tx.status === 'paid' ? 'badge-paid' : 'badge-pending';
+          const dateStr = tx.created_at ? new Date(tx.created_at).toLocaleString('en-IN') : new Date().toLocaleString('en-IN');
+          tr.innerHTML = `
+            <td><strong>${tx.invoice_number}</strong></td>
+            <td style="color: var(--text-light); font-size: 13px;">${dateStr}</td>
+            <td>${tx.patient_name}</td>
+            <td style="font-weight: 600;">₹${txAmount.toFixed(2)}</td>
+            <td>${tx.payment_mode || '-'}</td>
+            <td><span class="status-badge ${badgeClass}">${tx.status.toUpperCase()}</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        if(transactions.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-light);">No recent transactions</td></tr>`;
+        }
+
+        // Update Dashboard Metrics
+        document.getElementById('metric-revenue').textContent = `₹${totalRev.toFixed(2)}`;
+        document.getElementById('metric-pending').textContent = pendingCnt;
+        document.getElementById('metric-tx-count').textContent = transactions.length;
+      }
+
+      // Initialize
+      window.onload = () => {
+        updatePreview();
+        updateCalculations();
+        loadTransactions();
+      };
+    </script>
+  </body>
+</html>

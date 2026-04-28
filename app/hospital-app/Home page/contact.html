@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact Us - Hospital Management System</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, lightskyblue, #e0f7ff);
+        color: #333;
+        padding: 20px;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: rgb(108, 3, 246);
+        margin-bottom: 20px;
+      }
+      .contact-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+      }
+      .info-card {
+        background: #f0f0ff;
+        padding: 20px;
+        border-radius: 8px;
+        border: 2px solid rgb(108, 3, 246);
+        text-align: center;
+      }
+      .info-card h3 {
+        color: rgb(108, 3, 246);
+        margin-bottom: 10px;
+      }
+      .info-card p {
+        font-size: 14px;
+        line-height: 1.8;
+      }
+      .contact-form {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: rgb(108, 3, 246);
+      }
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-family: inherit;
+      }
+      .form-group textarea {
+        resize: vertical;
+        min-height: 120px;
+      }
+      button {
+        padding: 10px 20px;
+        background: rgb(108, 3, 246);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background: rgb(146, 71, 245);
+      }
+      .back-btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background: rgb(108, 3, 246);
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 20px;
+        cursor: pointer;
+      }
+      .back-btn:hover {
+        background: rgb(146, 71, 245);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📞 Contact Us</h1>
+      <p>We'd love to hear from you. Get in touch with us using any of the methods below:</p>
+
+      <div class="contact-info">
+        <div class="info-card">
+          <h3>📍 Address</h3>
+          <p>Hospital Complex<br />Medical City, State 123456<br />Country</p>
+        </div>
+        <div class="info-card">
+          <h3>📱 Phone</h3>
+          <p>
+            Main: +1-XXX-XXX-XXXX<br />Emergency: +1-XXX-XXX-XXXX<br />Toll Free: 1-800-HOSPITAL
+          </p>
+        </div>
+        <div class="info-card">
+          <h3>📧 Email</h3>
+          <p>
+            General: info@hospital.com<br />Support: support@hospital.com<br />Appointments:
+            appointments@hospital.com
+          </p>
+        </div>
+      </div>
+
+      <div class="contact-form">
+        <h2 style="color: rgb(108, 3, 246); margin-bottom: 15px">Send us a Message</h2>
+        <form onsubmit="handleSubmit(event)">
+          <div class="form-group">
+            <label for="name">Full Name *</label>
+            <input type="text" id="name" name="name" required />
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="subject">Subject *</label>
+            <input type="text" id="subject" name="subject" required />
+          </div>
+          <div class="form-group">
+            <label for="message">Message *</label>
+            <textarea id="message" name="message" required></textarea>
+          </div>
+          <button type="submit">Send Message</button>
+        </form>
+      </div>
+
+      <h2 style="color: rgb(108, 3, 246); margin-top: 30px">Office Hours</h2>
+      <p>
+        <strong>Monday to Friday:</strong> 8:00 AM - 6:00 PM<br />
+        <strong>Saturday:</strong> 9:00 AM - 2:00 PM<br />
+        <strong>Sunday:</strong> Emergency Services Only (24/7)<br />
+        <strong>Holidays:</strong> Emergency Services Available
+      </p>
+
+      <button class="back-btn" onclick="history.back()">← Go Back</button>
+    </div>
+
+    <script>
+      function handleSubmit(event) {
+        event.preventDefault();
+        alert('Thank you for your message! We will contact you soon.');
+        event.target.reset();
+      }
+    </script>
+  </body>
+</html>

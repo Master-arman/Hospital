@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pharmacy Dashboard — Order Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#0f0c29,#1a1a3e,#16213e);min-height:100vh;color:#e2e8f0;}
+    .top-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;flex-wrap:wrap;gap:10px;background:linear-gradient(135deg,#059669,#10b981);position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(5,150,105,.4);}
+    .top-bar h1{font-size:18px;color:#fff;display:flex;align-items:center;gap:8px;}
+    .top-bar-actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .btn{padding:9px 16px;border:none;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;transition:all .25s;color:#fff;}
+    .btn:hover{transform:translateY(-2px);}
+    .btn-primary{background:linear-gradient(135deg,#6d28d9,#8b5cf6);}
+    .btn-success{background:linear-gradient(135deg,#059669,#10b981);}
+    .btn-danger{background:linear-gradient(135deg,#dc2626,#ef4444);}
+    .btn-warn{background:linear-gradient(135deg,#d97706,#f59e0b);color:#000;}
+    .btn-info{background:linear-gradient(135deg,#0891b2,#06b6d4);}
+    .btn-secondary{background:#374151;}
+    .btn-back{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);}
+    .btn-sm{padding:7px 14px;font-size:11px;border-radius:8px;}
+    /* Stats */
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:14px 16px;}
+    .stat-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;text-align:center;}
+    .stat-num{font-size:26px;font-weight:800;margin-bottom:2px;}
+    .stat-label{font-size:10px;color:#94a3b8;text-transform:uppercase;font-weight:600;letter-spacing:.5px;}
+    .stat-pending .stat-num{color:#fbbf24;}
+    .stat-approved .stat-num{color:#38bdf8;}
+    .stat-packed .stat-num{color:#a78bfa;}
+    .stat-shipping .stat-num{color:#34d399;}
+    .stat-delivered .stat-num{color:#10b981;}
+    .stat-cancelled .stat-num{color:#f87171;}
+    /* Filter tabs */
+    .filter-tabs{display:flex;gap:0;margin:0 16px 12px;background:rgba(255,255,255,.06);border-radius:12px;overflow-x:auto;border:1px solid rgba(255,255,255,.1);flex-wrap:nowrap;}
+    .ftab{flex:1;padding:10px 8px;text-align:center;cursor:pointer;font-weight:700;font-size:11px;color:#94a3b8;transition:.2s;border:none;background:none;white-space:nowrap;min-width:80px;}
+    .ftab.active{background:#059669;color:#fff;}
+    .ftab:hover:not(.active){background:rgba(255,255,255,.06);}
+    .ftab .ftab-count{display:inline-block;background:rgba(255,255,255,.15);border-radius:8px;padding:1px 6px;font-size:9px;margin-left:3px;}
+    .ftab.active .ftab-count{background:rgba(255,255,255,.3);}
+    /* Order Cards */
+    .orders-list{padding:0 16px 80px;}
+    .order-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:14px;transition:.3s;}
+    .order-card:hover{border-color:rgba(16,185,129,.3);}
+    .order-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:6px;}
+    .order-id{font-weight:800;color:#fff;font-size:16px;}
+    .order-patient{font-size:13px;color:#a78bfa;font-weight:600;margin-top:2px;}
+    .order-time{font-size:11px;color:#64748b;}
+    .status-badge{padding:5px 12px;border-radius:12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+    .sb-pending{background:#78350f;color:#fcd34d;}
+    .sb-approved{background:#1e3a5f;color:#7dd3fc;}
+    .sb-packed{background:#312e81;color:#a5b4fc;}
+    .sb-out{background:#064e3b;color:#6ee7b7;}
+    .sb-delivered{background:#14532d;color:#86efac;}
+    .sb-cancelled{background:#7f1d1d;color:#fca5a5;}
+    /* Progress */
+    .progress-bar{display:flex;align-items:flex-start;margin:14px 0;gap:0;}
+    .progress-step{flex:1;text-align:center;position:relative;}
+    .progress-dot{width:28px;height:28px;border-radius:50%;background:#374151;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#94a3b8;margin:0 auto;position:relative;z-index:2;transition:.3s;}
+    .progress-dot.done{background:#10b981;color:#fff;}
+    .progress-dot.current{background:#8b5cf6;color:#fff;box-shadow:0 0 16px rgba(139,92,246,.5);animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{box-shadow:0 0 16px rgba(139,92,246,.3);}50%{box-shadow:0 0 24px rgba(139,92,246,.7);}}
+    .progress-label{font-size:9px;color:#64748b;margin-top:4px;font-weight:600;}
+    .progress-line{position:absolute;top:14px;left:50%;right:-50%;height:3px;background:#374151;z-index:1;}
+    .progress-line.done{background:#10b981;}
+    /* Items */
+    .items-section{background:rgba(255,255,255,.03);border-radius:10px;padding:10px 12px;margin:10px 0;}
+    .items-section h4{font-size:11px;color:#94a3b8;text-transform:uppercase;margin-bottom:8px;font-weight:700;letter-spacing:.5px;}
+    .item-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;}
+    .item-row:last-child{border:none;}
+    .item-name{color:#e2e8f0;font-weight:600;}
+    .item-qty{color:#94a3b8;}
+    .item-price{color:#10b981;font-weight:700;}
+    /* Address & Details */
+    .detail-row{display:flex;gap:6px;align-items:flex-start;font-size:12px;color:#94a3b8;margin:4px 0;}
+    .detail-row .icon{flex-shrink:0;width:18px;}
+    .detail-row a{color:#38bdf8;}
+    /* Action Buttons */
+    .action-bar{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+    .action-bar .btn{flex:1;text-align:center;min-width:100px;}
+    /* Refill badge */
+    .refill-badge{background:linear-gradient(135deg,#d97706,#f59e0b);color:#000;font-size:9px;padding:2px 8px;border-radius:6px;font-weight:700;margin-left:6px;}
+    /* Prescription preview */
+    .presc-preview{display:inline-flex;align-items:center;gap:6px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:6px 10px;font-size:11px;color:#fbbf24;margin:6px 0;cursor:pointer;transition:.2s;}
+    .presc-preview:hover{background:rgba(251,191,36,.2);}
+    /* Total */
+    .order-total{font-size:14px;font-weight:800;color:#10b981;margin-top:8px;display:flex;justify-content:space-between;align-items:center;}
+    .order-total .eta{color:#94a3b8;font-size:12px;font-weight:600;}
+    /* Empty */
+    .empty-state{text-align:center;padding:60px 20px;color:#64748b;}
+    .empty-state h3{font-size:20px;margin-bottom:8px;color:#94a3b8;}
+    .empty-state p{font-size:13px;}
+    /* Toast */
+    .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;padding:12px 24px;border-radius:12px;font-size:13px;font-weight:600;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.4);max-width:90%;text-align:center;display:none;}
+    .toast-success{background:linear-gradient(135deg,#059669,#10b981);}
+    .toast-error{background:linear-gradient(135deg,#dc2626,#ef4444);}
+    /* Print slip */
+    .slip-modal-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+    .slip-modal-overlay.show{display:flex;}
+    .slip-modal{background:#fff;color:#000;border-radius:16px;max-width:400px;width:90%;max-height:80vh;overflow-y:auto;padding:24px;}
+    .slip-modal h2{font-size:18px;margin-bottom:6px;text-align:center;}
+    .slip-modal .slip-line{border-top:1px dashed #ccc;margin:10px 0;}
+    .slip-modal table{width:100%;font-size:12px;border-collapse:collapse;}
+    .slip-modal th,.slip-modal td{padding:5px 6px;text-align:left;border-bottom:1px solid #eee;}
+    .slip-modal th{font-weight:700;background:#f3f3f3;}
+    .slip-actions{display:flex;gap:8px;margin-top:14px;}
+    .slip-actions .btn{flex:1;text-align:center;}
+    /* Search */
+    .search-wrap{padding:0 16px;margin-bottom:12px;}
+    .search-box{width:100%;padding:11px 14px;border:1.5px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.06);color:#e2e8f0;font-size:13px;outline:none;}
+    .search-box:focus{border-color:#10b981;}
+    @media(max-width:768px){
+      .top-bar h1{font-size:15px;}
+      .stats-row{grid-template-columns:repeat(3,1fr);}
+      .action-bar .btn{font-size:10px;padding:7px 10px;min-width:70px;}
+    }
+    @media(max-width:420px){
+      .stats-row{grid-template-columns:repeat(2,1fr);}
+      .order-header{flex-direction:column;}
+    }
+    @media print{
+      body{background:#fff!important;color:#000!important;}
+      .top-bar,.filter-tabs,.stats-row,.action-bar,.search-wrap,.slip-actions,.toast{display:none!important;}
+      .order-card{break-inside:avoid;border:1px solid #ccc!important;background:#fff!important;}
+      .order-id,.order-patient,.item-name,.order-total{color:#000!important;}
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>🏪 Pharmacy Dashboard</h1>
+  <div class="top-bar-actions">
+    <button class="btn btn-back" onclick="location.href='home.html'">← Home</button>
+    <button class="btn btn-back" onclick="location.href='medicine-delivery.html'">🚚 Delivery</button>
+    <button class="btn btn-back" onclick="location.href='medicine.html'">💊 Stock</button>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-row" id="statsRow">
+  <div class="stat-card stat-pending"><div class="stat-num" id="sPending">0</div><div class="stat-label">⏳ Pending</div></div>
+  <div class="stat-card stat-approved"><div class="stat-num" id="sApproved">0</div><div class="stat-label">✅ Approved</div></div>
+  <div class="stat-card stat-packed"><div class="stat-num" id="sPacked">0</div><div class="stat-label">📦 Packed</div></div>
+  <div class="stat-card stat-shipping"><div class="stat-num" id="sShipping">0</div><div class="stat-label">🚚 Shipping</div></div>
+  <div class="stat-card stat-delivered"><div class="stat-num" id="sDelivered">0</div><div class="stat-label">✔ Delivered</div></div>
+  <div class="stat-card stat-cancelled"><div class="stat-num" id="sCancelled">0</div><div class="stat-label">❌ Cancelled</div></div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="filter-tabs" id="filterTabs">
+  <div class="ftab active" data-f="All" onclick="setFilter(this)">All</div>
+  <div class="ftab" data-f="Pending Verification" onclick="setFilter(this)">⏳ Pending</div>
+  <div class="ftab" data-f="Approved" onclick="setFilter(this)">✅ Approved</div>
+  <div class="ftab" data-f="Packed" onclick="setFilter(this)">📦 Packed</div>
+  <div class="ftab" data-f="Out for Delivery" onclick="setFilter(this)">🚚 Shipping</div>
+  <div class="ftab" data-f="Delivered" onclick="setFilter(this)">✔ Done</div>
+  <div class="ftab" data-f="Cancelled" onclick="setFilter(this)">❌ Cancelled</div>
+</div>
+
+<div class="search-wrap">
+  <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search by order ID, patient name..." oninput="renderOrders()"/>
+</div>
+
+<div class="orders-list" id="ordersList"></div>
+
+<!-- Packing Slip Modal -->
+<div class="slip-modal-overlay" id="slipOverlay" onclick="closeSlip(event)">
+  <div class="slip-modal" id="slipContent" onclick="event.stopPropagation()"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API = 'http://localhost:5000/api';
+let allOrders = [], currentFilter = 'All';
+
+window.addEventListener('DOMContentLoaded', loadOrders);
+setInterval(loadOrders, 15000); // auto-refresh every 15s
+
+async function loadOrders() {
+  try {
+    const res = await fetch(`${API}/orders`);
+    allOrders = await res.json();
+    updateStats();
+    renderOrders();
+  } catch(e) { document.getElementById('ordersList').innerHTML='<div class="empty-state"><h3>⚠️ Cannot connect to server</h3><p>Make sure backend is running on port 5000</p></div>'; }
+}
+
+function updateStats() {
+  const count = (s) => allOrders.filter(o=>o.status===s).length;
+  document.getElementById('sPending').textContent = count('Pending Verification');
+  document.getElementById('sApproved').textContent = count('Approved');
+  document.getElementById('sPacked').textContent = count('Packed');
+  document.getElementById('sShipping').textContent = count('Out for Delivery');
+  document.getElementById('sDelivered').textContent = count('Delivered');
+  document.getElementById('sCancelled').textContent = count('Cancelled');
+}
+
+function setFilter(el) {
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = el.dataset.f;
+  renderOrders();
+}
+
+function renderOrders() {
+  const search = (document.getElementById('searchBox')?.value||'').toLowerCase();
+  let filtered = allOrders;
+  if(currentFilter!=='All') filtered = filtered.filter(o=>o.status===currentFilter);
+  if(search) filtered = filtered.filter(o=> ('#'+o.id).includes(search) || (o.patient_name||'').toLowerCase().includes(search) || (o.items||[]).some(i=>i.medicine_name.toLowerCase().includes(search)));
+
+  const container = document.getElementById('ordersList');
+  if(!filtered.length) { container.innerHTML='<div class="empty-state"><h3>No orders found</h3><p>Orders will appear here when placed</p></div>'; return; }
+
+  container.innerHTML = filtered.map(o => {
+    const statuses = ['Pending Verification','Approved','Packed','Out for Delivery','Delivered'];
+    const statusIdx = statuses.indexOf(o.status);
+    const sKey = o.status.replace(/\s+/g,'').toLowerCase();
+    const sClsMap = {pendingverification:'pending',approved:'approved',packed:'packed',outfordelivery:'out',delivered:'delivered',cancelled:'cancelled'};
+
+    // Progress bar
+    let progress = '';
+    if(o.status!=='Cancelled') {
+      progress = '<div class="progress-bar">' + statuses.map((s,i) => {
+        const dotCls = i<statusIdx?'done':i===statusIdx?'current':'';
+        const lineCls = i<statusIdx?'done':'';
+        return `<div class="progress-step">${i>0?`<div class="progress-line ${lineCls}"></div>`:''}
+          <div class="progress-dot ${dotCls}">${i<=statusIdx?'✓':i+1}</div>
+          <div class="progress-label">${['Ordered','Verified','Packed','Shipped','Delivered'][i]}</div></div>`;
+      }).join('') + '</div>';
+    }
+
+    // Items
+    const itemsHtml = (o.items||[]).map(it=>`<div class="item-row"><span class="item-name">${esc(it.medicine_name)}</span><span class="item-qty">×${it.quantity}</span><span class="item-price">₹${(parseFloat(it.price_at_purchase)*it.quantity).toFixed(2)}</span></div>`).join('');
+
+    const refillBadge = o.is_monthly_refill?'<span class="refill-badge">🔄 Monthly Refill</span>':'';
+
+    // Prescription
+    const prescHtml = o.prescription_file?`<a class="presc-preview" href="/uploads/${o.prescription_file}" target="_blank">📎 View Prescription</a>`:'';
+
+    // Action buttons based on status
+    let actions = '';
+    if(o.status==='Pending Verification') {
+      actions = `<div class="action-bar">
+        <button class="btn btn-success btn-sm" onclick="updateStatus(${o.id},'Approved')">✅ Approve & Verify</button>
+        <button class="btn btn-danger btn-sm" onclick="updateStatus(${o.id},'Cancelled')">❌ Reject</button>
+        <button class="btn btn-secondary btn-sm" onclick="showSlip(${o.id})">🖨 Slip</button>
+      </div>`;
+    } else if(o.status==='Approved') {
+      actions = `<div class="action-bar">
+        <button class="btn btn-primary btn-sm" onclick="updateStatus(${o.id},'Packed')">📦 Mark as Packed</button>
+        <button class="btn btn-secondary btn-sm" onclick="showSlip(${o.id})">🖨 Print Slip</button>
+        <button class="btn btn-danger btn-sm" onclick="updateStatus(${o.id},'Cancelled')">❌ Cancel</button>
+      </div>`;
+    } else if(o.status==='Packed') {
+      actions = `<div class="action-bar">
+        <button class="btn btn-info btn-sm" onclick="updateStatus(${o.id},'Out for Delivery')">🚚 Ship Now</button>
+        <button class="btn btn-secondary btn-sm" onclick="showSlip(${o.id})">🖨 Slip</button>
+      </div>`;
+    } else if(o.status==='Out for Delivery') {
+      actions = `<div class="action-bar">
+        <button class="btn btn-success btn-sm" onclick="updateStatus(${o.id},'Delivered')">✔ Mark Delivered</button>
+      </div>`;
+    }
+
+    return `<div class="order-card">
+      <div class="order-header">
+        <div>
+          <div class="order-id">Order #${o.id} ${refillBadge}</div>
+          <div class="order-patient">👤 ${esc(o.patient_name||'Unknown')}</div>
+          <div class="order-time">🕐 ${new Date(o.created_at).toLocaleString()}</div>
+        </div>
+        <span class="status-badge sb-${sClsMap[sKey]||'pending'}">${o.status}</span>
+      </div>
+      ${progress}
+      <div class="items-section"><h4>📋 Order Items</h4>${itemsHtml||'<span style="color:#64748b;font-size:12px;">No items</span>'}</div>
+      ${o.address_line?`<div class="detail-row"><span class="icon">📍</span><span>${esc(o.address_line)}, ${esc(o.city||'')} ${o.pincode||''}</span></div>`:'<div class="detail-row"><span class="icon">🏥</span><span>Hospital Pickup</span></div>'}
+      ${o.phone?`<div class="detail-row"><span class="icon">📞</span><span>${o.phone}</span></div>`:''}
+      ${prescHtml}
+      <div class="order-total">
+        <span>💰 Total: ₹${parseFloat(o.total_price).toFixed(2)} • ${o.payment_method}</span>
+        <span class="eta">⏱ ETA ~${o.eta_minutes} min</span>
+      </div>
+      ${actions}
+    </div>`;
+  }).join('');
+}
+
+async function updateStatus(id, status) {
+  if(!confirm(`Update Order #${id} to "${status}"?`)) return;
+  try {
+    const res = await fetch(`${API}/orders/${id}/status`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status}) });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    showToast(data.message,'success');
+    loadOrders();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+function showSlip(id) {
+  const o = allOrders.find(x=>x.id===id);
+  if(!o) return;
+  const items = (o.items||[]).map(it=>`<tr><td>${esc(it.medicine_name)}</td><td style="text-align:center">${it.quantity}</td><td style="text-align:right">₹${(parseFloat(it.price_at_purchase)*it.quantity).toFixed(2)}</td></tr>`).join('');
+  document.getElementById('slipContent').innerHTML = `
+    <h2>🏥 Hospital Pharmacy</h2>
+    <p style="text-align:center;font-size:11px;color:#666;">Packing Slip / Invoice</p>
+    <div class="slip-line"></div>
+    <p style="font-size:12px;"><strong>Order #${o.id}</strong> | ${new Date(o.created_at).toLocaleString()}</p>
+    <p style="font-size:12px;"><strong>Patient:</strong> ${esc(o.patient_name||'N/A')}</p>
+    ${o.address_line?`<p style="font-size:12px;"><strong>Address:</strong> ${esc(o.address_line)}, ${esc(o.city||'')} ${o.pincode||''}</p>`:'<p style="font-size:12px;"><strong>Pickup:</strong> Hospital Counter</p>'}
+    ${o.phone?`<p style="font-size:12px;"><strong>Phone:</strong> ${o.phone}</p>`:''}
+    <div class="slip-line"></div>
+    <table><thead><tr><th>Medicine</th><th style="text-align:center">Qty</th><th style="text-align:right">Amount</th></tr></thead><tbody>${items}</tbody></table>
+    <div class="slip-line"></div>
+    <p style="font-size:14px;font-weight:800;text-align:right;">Total: ₹${parseFloat(o.total_price).toFixed(2)}</p>
+    <p style="font-size:11px;color:#666;text-align:right;">Payment: ${o.payment_method}</p>
+    ${o.is_monthly_refill?'<p style="font-size:11px;color:#d97706;text-align:center;margin-top:8px;">🔄 Auto-Refill Subscription Active</p>':''}
+    <div class="slip-actions">
+      <button class="btn btn-primary btn-sm" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeSlip()">Close</button>
+    </div>`;
+  document.getElementById('slipOverlay').classList.add('show');
+}
+function closeSlip(e) { if(!e||e.target.id==='slipOverlay') document.getElementById('slipOverlay').classList.remove('show'); }
+
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function showToast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast toast-'+type;t.style.display='block';setTimeout(()=>{t.style.display='none';},3500);}
+</script>
+</body>
+</html>

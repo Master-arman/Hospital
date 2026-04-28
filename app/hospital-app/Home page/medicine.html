@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medicine Dashboard — Hospital Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Inter','Segoe UI',Tahoma,sans-serif;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      min-height:100vh; color:#e2e8f0; padding:20px;
+    }
+    a { color:#a78bfa; text-decoration:none; }
+
+    .top-bar {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:24px; flex-wrap:wrap; gap:12px;
+    }
+    .top-bar h1 { font-size:28px; display:flex; align-items:center; gap:10px; }
+    .top-bar-actions { display:flex; gap:10px; flex-wrap:wrap; }
+
+    .btn {
+      padding:10px 20px; border:none; border-radius:10px; cursor:pointer;
+      font-size:14px; font-weight:700; transition:all .25s; color:#fff;
+    }
+    .btn:hover { transform:translateY(-2px); }
+    .btn-primary { background:linear-gradient(135deg,#6d28d9,#8b5cf6); }
+    .btn-primary:hover { box-shadow:0 6px 24px rgba(139,92,246,.5); }
+    .btn-success { background:linear-gradient(135deg,#059669,#10b981); }
+    .btn-success:hover { box-shadow:0 6px 24px rgba(16,185,129,.5); }
+    .btn-danger { background:linear-gradient(135deg,#dc2626,#ef4444); }
+    .btn-warn  { background:linear-gradient(135deg,#d97706,#f59e0b); }
+    .btn-secondary { background:#374151; }
+    .btn-sm { padding:6px 12px; font-size:11px; border-radius:8px; }
+    .btn-back { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); }
+    .btn-back:hover { background:rgba(255,255,255,.15); }
+
+    /* Stats */
+    .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+    .stat-card {
+      background:rgba(255,255,255,.06); backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,.1); border-radius:16px;
+      padding:22px; text-align:center; transition:all .3s;
+    }
+    .stat-card:hover { transform:translateY(-4px); border-color:rgba(139,92,246,.4); box-shadow:0 12px 36px rgba(0,0,0,.3); }
+    .stat-card .stat-icon { font-size:34px; margin-bottom:8px; }
+    .stat-card .stat-number { font-size:34px; font-weight:800; color:#fff; }
+    .stat-card .stat-label { font-size:13px; color:#94a3b8; margin-top:4px; }
+
+    /* Controls */
+    .controls { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
+    .search-box {
+      flex:1; min-width:250px; padding:11px 16px; border:1.5px solid rgba(255,255,255,.15);
+      border-radius:12px; background:rgba(255,255,255,.06); color:#e2e8f0;
+      font-size:14px; outline:none; transition:border .2s;
+    }
+    .search-box::placeholder { color:#64748b; }
+    .search-box:focus { border-color:#8b5cf6; }
+    .filter-pills { display:flex; gap:6px; flex-wrap:wrap; }
+    .pill {
+      padding:7px 16px; border-radius:20px; border:1.5px solid rgba(255,255,255,.12);
+      background:transparent; color:#94a3b8; cursor:pointer; font-size:12px;
+      font-weight:600; transition:all .2s;
+    }
+    .pill:hover { border-color:#8b5cf6; color:#c4b5fd; }
+    .pill.active { background:#8b5cf6; color:#fff; border-color:#8b5cf6; }
+
+    /* Medicine Cards Grid */
+    .med-grid {
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+      gap:16px; margin-bottom:24px;
+    }
+    .med-card {
+      background:rgba(255,255,255,.05); backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,.08); border-radius:16px;
+      padding:18px; transition:all .3s; position:relative; overflow:hidden;
+    }
+    .med-card:hover { transform:translateY(-4px); border-color:rgba(139,92,246,.35); box-shadow:0 12px 40px rgba(0,0,0,.3); }
+    .med-card-top { display:flex; gap:14px; align-items:flex-start; margin-bottom:12px; }
+    .med-card-img {
+      width:72px; height:72px; border-radius:12px; display:flex; align-items:center;
+      justify-content:center; font-size:28px; flex-shrink:0; overflow:hidden;
+    }
+    .med-card-info { flex:1; min-width:0; }
+    .med-card-name { font-size:16px; font-weight:700; color:#fff; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .med-card-supplier { font-size:11px; color:#94a3b8; margin-bottom:6px; }
+    .med-card-cat { display:block; }
+
+    .badge {
+      display:inline-block; padding:3px 10px; border-radius:12px; font-size:10px;
+      font-weight:700; text-transform:uppercase; letter-spacing:.4px;
+    }
+    .badge-tablet   { background:#312e81; color:#a5b4fc; }
+    .badge-syrup    { background:#064e3b; color:#6ee7b7; }
+    .badge-injection{ background:#7c2d12; color:#fdba74; }
+    .badge-capsule  { background:#1e3a5f; color:#7dd3fc; }
+    .badge-ointment { background:#3f3f46; color:#d4d4d8; }
+    .badge-drops    { background:#0e4429; color:#86efac; }
+    .badge-inhaler  { background:#4a1d6e; color:#d8b4fe; }
+    .badge-powder   { background:#451a03; color:#fcd34d; }
+    .badge-cream    { background:#581c87; color:#e9d5ff; }
+    .badge-gel      { background:#134e4a; color:#99f6e4; }
+    .badge-spray    { background:#0c4a6e; color:#bae6fd; }
+    .badge-patch    { background:#713f12; color:#fde68a; }
+    .badge-suppository { background:#831843; color:#fbcfe8; }
+    .badge-solution { background:#1e3a5f; color:#bfdbfe; }
+
+    .med-card-details { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px; }
+    .med-detail { font-size:12px; }
+    .med-detail-label { color:#64748b; font-size:10px; display:block; margin-bottom:1px; }
+    .med-detail-value { font-weight:600; }
+
+    .stock-high { color:#34d399; }
+    .stock-med  { color:#fbbf24; }
+    .stock-low  { color:#f87171; }
+    .restock-tag {
+      display:inline-block; background:#dc2626; color:#fff; font-size:9px;
+      padding:2px 7px; border-radius:8px; font-weight:700; margin-left:4px;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.5;} }
+    .expiry-ok   { color:#94a3b8; }
+    .expiry-warn { color:#fbbf24; }
+    .expiry-danger { color:#f87171; }
+    .expiry-expired { color:#ef4444; text-decoration:line-through; }
+
+    .med-card-actions { display:flex; gap:6px; }
+    .med-card-actions .btn { flex:1; text-align:center; font-size:11px; padding:7px 4px; }
+
+    /* View Toggle */
+    .view-toggle { display:flex; gap:4px; background:rgba(255,255,255,.06); border-radius:10px; padding:3px; }
+    .view-btn { padding:6px 14px; border:none; border-radius:8px; background:transparent; color:#94a3b8;
+      cursor:pointer; font-size:13px; font-weight:600; transition:.2s; }
+    .view-btn.active { background:#8b5cf6; color:#fff; }
+
+    /* Table View */
+    .table-wrap {
+      background:rgba(255,255,255,.04); backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,.08); border-radius:14px;
+      overflow:hidden; display:none;
+    }
+    .table-wrap.show { display:block; }
+    table { width:100%; border-collapse:collapse; }
+    thead { background:rgba(139,92,246,.15); }
+    th { padding:12px 14px; text-align:left; font-size:12px; color:#c4b5fd; font-weight:700;
+         text-transform:uppercase; letter-spacing:.5px; cursor:pointer; user-select:none; white-space:nowrap; }
+    th:hover { color:#fff; }
+    th .sort-arrow { margin-left:3px; font-size:9px; opacity:.5; }
+    td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,.04); font-size:13px; }
+    tr:hover { background:rgba(139,92,246,.07); }
+    .td-med { display:flex; align-items:center; gap:10px; }
+    .td-med-img { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+    .actions-cell { display:flex; gap:4px; }
+
+    /* Empty */
+    .empty-state { text-align:center; padding:60px 20px; color:#64748b; }
+    .empty-state h3 { font-size:22px; margin-bottom:8px; color:#94a3b8; }
+
+    /* Modal */
+    .modal-overlay {
+      display:none; position:fixed; inset:0; z-index:10000;
+      background:rgba(0,0,0,.7); backdrop-filter:blur(6px);
+      align-items:center; justify-content:center; padding:20px;
+    }
+    .modal-overlay.show { display:flex; }
+    .modal-box {
+      background:#1e1b3a; border:1px solid rgba(139,92,246,.3); border-radius:18px;
+      width:480px; max-width:100%; max-height:90vh; overflow-y:auto;
+      box-shadow:0 30px 80px rgba(0,0,0,.5);
+      animation: modalIn .3s cubic-bezier(.34,1.4,.64,1);
+    }
+    @keyframes modalIn { from{transform:translateY(40px) scale(.95);opacity:0;} to{transform:none;opacity:1;} }
+    .modal-head {
+      background:linear-gradient(135deg,#6d28d9,#8b5cf6); padding:18px 22px;
+      display:flex; justify-content:space-between; align-items:center;
+      border-radius:18px 18px 0 0;
+    }
+    .modal-head h3 { color:#fff; font-size:17px; }
+    .modal-close-btn { background:rgba(255,255,255,.2); border:none; border-radius:50%;
+      width:30px; height:30px; color:#fff; font-size:16px; cursor:pointer; display:flex;
+      align-items:center; justify-content:center; transition:.2s; }
+    .modal-close-btn:hover { background:rgba(255,255,255,.35); }
+    .modal-body { padding:22px; }
+    .form-group { margin-bottom:16px; }
+    .form-group label { display:block; font-size:13px; font-weight:600; color:#c4b5fd; margin-bottom:6px; }
+    .form-group input, .form-group select {
+      width:100%; padding:10px 14px; border:1.5px solid rgba(255,255,255,.15);
+      border-radius:10px; background:rgba(255,255,255,.06); color:#e2e8f0;
+      font-size:14px; outline:none; transition:border .2s; font-family:inherit;
+    }
+    .form-group input:focus, .form-group select:focus { border-color:#8b5cf6; }
+    .form-group select option { background:#1e1b3a; color:#e2e8f0; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .modal-footer { padding:16px 22px; border-top:1px solid rgba(255,255,255,.08); display:flex; gap:10px; justify-content:flex-end; }
+
+    .prescribe-info { background:rgba(139,92,246,.1); border:1px solid rgba(139,92,246,.2);
+      border-radius:10px; padding:12px; margin-bottom:16px; font-size:13px; line-height:1.6; }
+    .prescribe-info strong { color:#c4b5fd; }
+
+    .toast {
+      position:fixed; top:20px; right:20px; z-index:99999; padding:14px 22px;
+      border-radius:12px; font-size:14px; font-weight:600; color:#fff;
+      box-shadow:0 8px 30px rgba(0,0,0,.4); animation: toastIn .35s ease;
+      max-width:380px;
+    }
+    .toast-success { background:linear-gradient(135deg,#059669,#10b981); }
+    .toast-error   { background:linear-gradient(135deg,#dc2626,#ef4444); }
+    @keyframes toastIn { from{transform:translateX(100px);opacity:0;} to{transform:none;opacity:1;} }
+
+    .count-badge { background:rgba(255,255,255,.12); padding:2px 8px; border-radius:8px; font-size:12px; color:#94a3b8; margin-left:8px; }
+
+    @media(max-width:768px) {
+      .stats { grid-template-columns:1fr 1fr; }
+      .form-row { grid-template-columns:1fr; }
+      .controls { flex-direction:column; }
+      .med-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <h1>💊 Medicine Dashboard <span class="count-badge" id="countBadge">0 items</span></h1>
+    <div class="top-bar-actions">
+      <button class="btn btn-back" onclick="window.location.href='home.html'">← Back to Home</button>
+      <div class="view-toggle">
+        <button class="view-btn active" id="vGrid" onclick="setView('grid')">🏷️ Cards</button>
+        <button class="view-btn" id="vTable" onclick="setView('table')">📋 Table</button>
+      </div>
+      <button class="btn btn-success" onclick="exportCSV()">📥 Export CSV</button>
+      <button class="btn btn-primary" onclick="openMedModal()">+ Add Medicine</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-icon">💊</div>
+      <div class="stat-number" id="statTotal">0</div>
+      <div class="stat-label">Total Medicines</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⚠️</div>
+      <div class="stat-number" id="statLow" style="color:#f87171;">0</div>
+      <div class="stat-label">Low Stock (&lt;10)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📅</div>
+      <div class="stat-number" id="statExpiring" style="color:#fbbf24;">0</div>
+      <div class="stat-label">Expiring Soon (&lt;90d)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💰</div>
+      <div class="stat-number" id="statValue">₹0</div>
+      <div class="stat-label">Total Inventory Value</div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <input type="text" class="search-box" id="searchMed" placeholder="🔍 Search by medicine name, category, or supplier..." oninput="renderAll()" />
+    <div class="filter-pills" id="filterPills">
+      <span class="pill active" data-cat="All" onclick="setFilter(this)">All</span>
+      <span class="pill" data-cat="Tablet" onclick="setFilter(this)">💊 Tablet</span>
+      <span class="pill" data-cat="Capsule" onclick="setFilter(this)">💠 Capsule</span>
+      <span class="pill" data-cat="Syrup" onclick="setFilter(this)">🧪 Syrup</span>
+      <span class="pill" data-cat="Injection" onclick="setFilter(this)">💉 Injection</span>
+      <span class="pill" data-cat="Ointment" onclick="setFilter(this)">🧴 Ointment</span>
+      <span class="pill" data-cat="Drops" onclick="setFilter(this)">💧 Drops</span>
+      <span class="pill" data-cat="Inhaler" onclick="setFilter(this)">🌬️ Inhaler</span>
+      <span class="pill" data-cat="Cream" onclick="setFilter(this)">🧴 Cream</span>
+      <span class="pill" data-cat="Powder" onclick="setFilter(this)">🧂 Powder</span>
+    </div>
+  </div>
+
+  <!-- Card Grid View -->
+  <div class="med-grid" id="medGrid"></div>
+
+  <!-- Table View -->
+  <div class="table-wrap" id="medTable">
+    <table>
+      <thead><tr>
+        <th onclick="sortBy('id')">Med ID <span class="sort-arrow">▲▼</span></th>
+        <th onclick="sortBy('name')">Medicine <span class="sort-arrow">▲▼</span></th>
+        <th onclick="sortBy('category')">Category <span class="sort-arrow">▲▼</span></th>
+        <th onclick="sortBy('stock')">Stock <span class="sort-arrow">▲▼</span></th>
+        <th onclick="sortBy('expiry_date')">Expiry <span class="sort-arrow">▲▼</span></th>
+        <th onclick="sortBy('price')">Price <span class="sort-arrow">▲▼</span></th>
+        <th>Supplier</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody id="medBody"></tbody>
+    </table>
+  </div>
+
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <h3>📭 No medicines found</h3>
+    <p>Click "+ Add Medicine" to add inventory or adjust your search filters.</p>
+  </div>
+
+  <!-- Add/Edit Medicine Modal -->
+  <div class="modal-overlay" id="medModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 id="medModalTitle">Add Medicine</h3>
+        <button class="modal-close-btn" onclick="closeMedModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="medForm" onsubmit="saveMedicine(event)">
+          <input type="hidden" id="medEditId" />
+          <div class="form-group">
+            <label>Medicine Name *</label>
+            <input type="text" id="medName" required placeholder="e.g. Paracetamol 500mg" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Category *</label>
+              <select id="medCategory">
+                <option>Tablet</option><option>Capsule</option><option>Syrup</option>
+                <option>Injection</option><option>Ointment</option><option>Cream</option>
+                <option>Drops</option><option>Inhaler</option><option>Powder</option>
+                <option>Gel</option><option>Spray</option><option>Patch</option><option>Solution</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Stock Quantity *</label>
+              <input type="number" id="medStock" min="0" required placeholder="0" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Expiry Date *</label>
+              <input type="date" id="medExpiry" required />
+            </div>
+            <div class="form-group">
+              <label>Price per Unit (₹) *</label>
+              <input type="number" id="medPrice" min="0" step="0.01" required placeholder="0.00" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Supplier</label>
+            <input type="text" id="medSupplier" placeholder="e.g. Cipla Ltd" />
+          </div>
+          <div class="modal-footer" style="padding:0;border:none;margin-top:10px;">
+            <button type="button" class="btn btn-secondary" onclick="closeMedModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">💾 Save Medicine</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prescribe Modal -->
+  <div class="modal-overlay" id="prescribeModal">
+    <div class="modal-box" style="width:420px;">
+      <div class="modal-head" style="background:linear-gradient(135deg,#059669,#10b981);">
+        <h3>💉 Prescribe Medicine</h3>
+        <button class="modal-close-btn" onclick="closePrescribeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="prescribe-info">
+          <strong>Medicine:</strong> <span id="prescMedName">–</span><br/>
+          <strong>Available Stock:</strong> <span id="prescMedStock">–</span>
+        </div>
+        <form id="prescribeForm" onsubmit="submitPrescription(event)">
+          <input type="hidden" id="prescMedId" />
+          <div class="form-group">
+            <label>Select Patient *</label>
+            <select id="prescPatient" required>
+              <option value="">-- Loading Patients --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quantity *</label>
+            <input type="number" id="prescQty" min="1" required placeholder="1" />
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <input type="text" id="prescNotes" placeholder="e.g. Take after meals, twice a day" />
+          </div>
+          <div class="modal-footer" style="padding:0;border:none;margin-top:10px;">
+            <button type="button" class="btn btn-secondary" onclick="closePrescribeModal()">Cancel</button>
+            <button type="submit" class="btn btn-success">✅ Prescribe & Deduct Stock</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" style="display:none;"></div>
+
+<script>
+// ===== CATEGORY ICONS & COLORS =====
+const catConfig = {
+  'Tablet':     { icon:'💊', bg:'#312e81', img:'pic/medicine/tablet.png' },
+  'Capsule':    { icon:'💠', bg:'#1e3a5f', img:'pic/medicine/capsule.png' },
+  'Syrup':      { icon:'🧪', bg:'#064e3b', img:'pic/medicine/syrup.png' },
+  'Injection':  { icon:'💉', bg:'#7c2d12', img:'pic/medicine/injection.png' },
+  'Ointment':   { icon:'🧴', bg:'#3f3f46', img:'pic/medicine/ointment.png' },
+  'Cream':      { icon:'🧴', bg:'#581c87', img:'pic/medicine/ointment.png' },
+  'Drops':      { icon:'💧', bg:'#0e4429', img:'pic/medicine/drops.png' },
+  'Inhaler':    { icon:'🌬️', bg:'#4a1d6e', img:'pic/medicine/inhaler.png' },
+  'Powder':     { icon:'🧂', bg:'#451a03', img:'pic/medicine/powder.png' },
+  'Gel':        { icon:'🫧', bg:'#134e4a', img:'pic/medicine/gel.png' },
+  'Spray':      { icon:'🌫️', bg:'#0c4a6e', img:'pic/medicine/inhaler.png' },
+  'Patch':      { icon:'🩹', bg:'#713f12', img:'pic/medicine/tablet.png' },
+  'Solution':   { icon:'🧪', bg:'#1e3a5f', img:'pic/medicine/syrup.png' },
+  'Suppository':{ icon:'💠', bg:'#831843', img:'pic/medicine/capsule.png' },
+  'Drip':       { icon:'💧', bg:'#0c4a6e', img:'pic/medicine/iv_drip.png' },
+  'Dangerous':  { icon:'☠️', bg:'#7f1d1d', img:'pic/medicine/dangerous.png' },
+};
+
+// ===== DEFAULT SAMPLE MEDICINES (50+) =====
+const DEFAULT_MEDICINES = [
+  // --- TABLETS ---
+  { id:1,  name:'Paracetamol 500mg',       category:'Tablet',    stock:150, expiry_date:'2027-06-15', price:2.50,  supplier:'Sun Pharma' },
+  { id:2,  name:'Ibuprofen 400mg',          category:'Tablet',    stock:200, expiry_date:'2027-03-10', price:3.75,  supplier:'Dr. Reddy\'s' },
+  { id:3,  name:'Cetirizine 10mg',          category:'Tablet',    stock:300, expiry_date:'2027-09-01', price:1.50,  supplier:'Mankind Pharma' },
+  { id:4,  name:'Azithromycin 500mg',       category:'Tablet',    stock:45,  expiry_date:'2026-08-25', price:15.00, supplier:'Zydus Cadila' },
+  { id:5,  name:'Ciprofloxacin 500mg',      category:'Tablet',    stock:7,   expiry_date:'2026-10-12', price:10.00, supplier:'Ranbaxy' },
+  { id:6,  name:'Dolo 650mg',               category:'Tablet',    stock:250, expiry_date:'2027-11-05', price:3.00,  supplier:'Micro Labs' },
+  { id:7,  name:'Metformin 500mg',          category:'Tablet',    stock:180, expiry_date:'2027-08-12', price:4.00,  supplier:'USV Pvt Ltd' },
+  { id:8,  name:'Amlodipine 5mg',           category:'Tablet',    stock:90,  expiry_date:'2027-01-30', price:6.50,  supplier:'Torrent Pharma' },
+  { id:9,  name:'Pantoprazole 40mg',        category:'Tablet',    stock:110, expiry_date:'2027-07-22', price:7.00,  supplier:'Alkem Labs' },
+  { id:10, name:'Ranitidine 150mg',         category:'Tablet',    stock:3,   expiry_date:'2026-05-20', price:4.50,  supplier:'GSK' },
+  { id:11, name:'Levofloxacin 500mg',       category:'Tablet',    stock:65,  expiry_date:'2027-03-25', price:12.00, supplier:'Glenmark' },
+  { id:12, name:'Aspirin 75mg',             category:'Tablet',    stock:400, expiry_date:'2027-12-01', price:1.00,  supplier:'Bayer' },
+  { id:13, name:'Atorvastatin 10mg',        category:'Tablet',    stock:120, expiry_date:'2027-06-30', price:8.00,  supplier:'Pfizer' },
+  { id:14, name:'Losartan 50mg',            category:'Tablet',    stock:85,  expiry_date:'2027-04-15', price:9.00,  supplier:'Torrent Pharma' },
+  { id:15, name:'Montelukast 10mg',         category:'Tablet',    stock:55,  expiry_date:'2027-02-20', price:11.00, supplier:'Sun Pharma' },
+  { id:16, name:'Clopidogrel 75mg',         category:'Tablet',    stock:70,  expiry_date:'2027-05-10', price:7.50,  supplier:'Cadila Healthcare' },
+  { id:17, name:'Domperidone 10mg',         category:'Tablet',    stock:95,  expiry_date:'2027-08-18', price:2.00,  supplier:'Dr. Reddy\'s' },
+  { id:18, name:'Diclofenac Sodium 50mg',   category:'Tablet',    stock:140, expiry_date:'2027-09-25', price:3.50,  supplier:'Novartis' },
+  { id:19, name:'B-Complex Forte',          category:'Tablet',    stock:9,   expiry_date:'2026-07-18', price:8.50,  supplier:'Abbott India' },
+  // --- CAPSULES ---
+  { id:20, name:'Amoxicillin 250mg',        category:'Capsule',   stock:85,  expiry_date:'2026-12-20', price:8.00,  supplier:'Cipla Ltd' },
+  { id:21, name:'Omeprazole 20mg',          category:'Capsule',   stock:120, expiry_date:'2027-04-20', price:5.00,  supplier:'Sun Pharma' },
+  { id:22, name:'Vitamin D3 60000 IU',      category:'Capsule',   stock:75,  expiry_date:'2027-10-15', price:25.00, supplier:'Mankind Pharma' },
+  { id:23, name:'Gabapentin 300mg',         category:'Capsule',   stock:50,  expiry_date:'2027-07-05', price:14.00, supplier:'Intas Pharma' },
+  { id:24, name:'Doxycycline 100mg',        category:'Capsule',   stock:60,  expiry_date:'2027-01-12', price:6.00,  supplier:'Cipla Ltd' },
+  { id:25, name:'Pregabalin 75mg',          category:'Capsule',   stock:40,  expiry_date:'2026-11-28', price:18.00, supplier:'Torrent Pharma' },
+  { id:26, name:'Fluconazole 150mg',        category:'Capsule',   stock:35,  expiry_date:'2027-03-14', price:22.00, supplier:'Zydus Cadila' },
+  // --- SYRUPS ---
+  { id:27, name:'Benadryl Cough Syrup',     category:'Syrup',     stock:60,  expiry_date:'2026-11-15', price:65.00, supplier:'Johnson & Johnson' },
+  { id:28, name:'Multivitamin Syrup',       category:'Syrup',     stock:42,  expiry_date:'2027-06-10', price:75.00, supplier:'Abbott India' },
+  { id:29, name:'Grilinctus Syrup',         category:'Syrup',     stock:30,  expiry_date:'2027-02-05', price:85.00, supplier:'Franco Indian' },
+  { id:30, name:'Lactulose Solution',       category:'Syrup',     stock:25,  expiry_date:'2026-09-18', price:95.00, supplier:'Abbott India' },
+  { id:31, name:'Cetirizine Syrup (Kids)',  category:'Syrup',     stock:55,  expiry_date:'2027-05-20', price:45.00, supplier:'Cipla Ltd' },
+  { id:32, name:'Zincovit Syrup',           category:'Syrup',     stock:38,  expiry_date:'2027-04-12', price:110.00,supplier:'Apex Labs' },
+  // --- INJECTIONS ---
+  { id:33, name:'Insulin Glargine',         category:'Injection', stock:25,  expiry_date:'2026-07-10', price:450.00,supplier:'Novo Nordisk' },
+  { id:34, name:'Amikacin 500mg',           category:'Injection', stock:15,  expiry_date:'2026-09-30', price:85.00, supplier:'Cipla Ltd' },
+  { id:35, name:'Ceftriaxone 1g',           category:'Injection', stock:35,  expiry_date:'2027-01-20', price:65.00, supplier:'Lupin' },
+  { id:36, name:'Tetanus Toxoid (TT)',      category:'Injection', stock:100, expiry_date:'2027-08-15', price:20.00, supplier:'Serum Institute' },
+  { id:37, name:'Rabies Vaccine',           category:'Injection', stock:20,  expiry_date:'2026-12-05', price:350.00,supplier:'Bharat Biotech' },
+  { id:38, name:'Diclofenac Injection',     category:'Injection', stock:45,  expiry_date:'2027-03-08', price:15.00, supplier:'Novartis' },
+  // --- OINTMENTS ---
+  { id:39, name:'Betadine Ointment',        category:'Ointment',  stock:40,  expiry_date:'2027-05-18', price:35.00, supplier:'Win-Medicare' },
+  { id:40, name:'Soframycin Skin Cream',    category:'Ointment',  stock:55,  expiry_date:'2027-06-22', price:42.00, supplier:'Sanofi' },
+  { id:41, name:'Candid-B Cream',           category:'Cream',     stock:30,  expiry_date:'2027-04-10', price:55.00, supplier:'Glenmark' },
+  // --- DROPS ---
+  { id:42, name:'Moxifloxacin Eye Drops',   category:'Drops',     stock:30,  expiry_date:'2026-08-01', price:55.00, supplier:'Allergan' },
+  { id:43, name:'Ofloxacin Ear Drops',      category:'Drops',     stock:50,  expiry_date:'2027-02-15', price:40.00, supplier:'Cipla Ltd' },
+  { id:44, name:'Nasivion Nasal Drops',     category:'Drops',     stock:45,  expiry_date:'2027-07-30', price:60.00, supplier:'Merck' },
+  // --- INHALERS ---
+  { id:45, name:'Salbutamol Inhaler',       category:'Inhaler',   stock:8,   expiry_date:'2026-09-05', price:120.00,supplier:'Cipla Ltd' },
+  { id:46, name:'Budesonide Inhaler',       category:'Inhaler',   stock:12,  expiry_date:'2027-01-15', price:280.00,supplier:'AstraZeneca' },
+  { id:47, name:'Levosalbutamol Inhaler',   category:'Inhaler',   stock:6,   expiry_date:'2026-10-22', price:150.00,supplier:'Cipla Ltd' },
+  // --- POWDERS ---
+  { id:48, name:'ORS Powder',               category:'Powder',    stock:5,   expiry_date:'2026-06-30', price:12.00, supplier:'FDC Ltd' },
+  { id:49, name:'Sucralfate Powder',        category:'Powder',    stock:20,  expiry_date:'2027-03-01', price:35.00, supplier:'Torrent Pharma' },
+  { id:50, name:'Antacid Powder (ENO)',      category:'Powder',    stock:80,  expiry_date:'2027-09-12', price:5.00,  supplier:'GSK' },
+  // --- GELS ---
+  { id:51, name:'Diclofenac Gel',           category:'Gel',       stock:55,  expiry_date:'2027-02-28', price:28.00, supplier:'Novartis' },
+  { id:52, name:'Voveran Emulgel',          category:'Gel',       stock:35,  expiry_date:'2027-05-15', price:95.00, supplier:'Novartis' },
+  // --- PATCHES ---
+  { id:53, name:'Nicotine Patch',           category:'Patch',     stock:18,  expiry_date:'2027-08-20', price:200.00,supplier:'Cipla Ltd' },
+  { id:54, name:'Fentanyl Patch',           category:'Patch',     stock:4,   expiry_date:'2026-11-10', price:850.00,supplier:'Johnson & Johnson' },
+  // --- SPRAYS ---
+  { id:55, name:'Otrivin Nasal Spray',      category:'Spray',     stock:28,  expiry_date:'2027-04-05', price:80.00, supplier:'Novartis' },
+  { id:56, name:'Volini Pain Relief Spray', category:'Spray',     stock:50,  expiry_date:'2027-10-20', price:180.00,supplier:'Ranbaxy' },
+  // --- DRIPS & DANGEROUS ---
+  { id:57, name:'Normal Saline IV 500ml',   category:'Drip',      stock:250, expiry_date:'2027-11-20', price:55.00, supplier:'Core Healthcare' },
+  { id:58, name:'Glucose IV (Dextrose 5%)', category:'Drip',      stock:180, expiry_date:'2027-08-15', price:65.00, supplier:'Nirlife' },
+  { id:59, name:'Morphine Sulphate Inj',    category:'Dangerous', stock:12,  expiry_date:'2026-05-30', price:450.00,supplier:'Neon Labs' },
+  { id:60, name:'Diazepam 5mg Tablet',      category:'Dangerous', stock:45,  expiry_date:'2027-01-14', price:15.00, supplier:'Abbott' },
+  { id:61, name:'Snake Antivenom',          category:'Dangerous', stock:8,   expiry_date:'2026-10-05', price:1200.0,supplier:'Bharat Serums' },
+];
+
+// ===== STATE =====
+let medicines = [];
+let currentFilter = 'All';
+let sortCol = 'name';
+let sortDir = 1;
+let currentView = 'grid';
+let nextId = 100;
+
+// ===== INIT =====
+window.addEventListener('DOMContentLoaded', () => {
+  loadFromStorage();
+  renderAll();
+});
+
+function loadFromStorage() {
+  // Force update to new version with 61 medicines and new images
+  const version = localStorage.getItem('hospital_medicines_version');
+  if (version !== 'v2') {
+    localStorage.removeItem('hospital_medicines');
+    localStorage.setItem('hospital_medicines_version', 'v2');
+  }
+
+  const saved = localStorage.getItem('hospital_medicines');
+  if (saved) {
+    medicines = JSON.parse(saved);
+    nextId = Math.max(...medicines.map(m => m.id), 99) + 1;
+  } else {
+    medicines = JSON.parse(JSON.stringify(DEFAULT_MEDICINES));
+    nextId = Math.max(...medicines.map(m => m.id), 99) + 1;
+    saveToStorage();
+  }
+}
+
+function saveToStorage() {
+  localStorage.setItem('hospital_medicines', JSON.stringify(medicines));
+  localStorage.setItem('hospital_medicines_version', 'v2');
+}
+
+// Also try to sync with backend
+async function syncWithBackend(method, endpoint, data) {
+  try {
+    const opts = { method, headers:{'Content-Type':'application/json'} };
+    if (data) opts.body = JSON.stringify(data);
+    await fetch(`http://localhost:5000/api${endpoint}`, opts);
+  } catch(e) { /* backend not available, localStorage is primary */ }
+}
+
+// ===== STATS =====
+function updateStats() {
+  const now = new Date();
+  const in90 = new Date(); in90.setDate(in90.getDate()+90);
+  document.getElementById('statTotal').textContent = medicines.length;
+  document.getElementById('statLow').textContent = medicines.filter(m => m.stock < 10).length;
+  document.getElementById('statExpiring').textContent = medicines.filter(m => {
+    const exp = new Date(m.expiry_date);
+    return exp >= now && exp <= in90;
+  }).length;
+  const totalVal = medicines.reduce((s,m) => s + (m.stock * parseFloat(m.price||0)), 0);
+  document.getElementById('statValue').textContent = '₹' + totalVal.toLocaleString('en-IN', {maximumFractionDigits:0});
+  document.getElementById('countBadge').textContent = medicines.length + ' items';
+}
+
+// ===== GET FILTERED DATA =====
+function getFiltered() {
+  const search = document.getElementById('searchMed').value.toLowerCase();
+  let filtered = medicines.filter(m => {
+    const matchCat = currentFilter === 'All' || m.category === currentFilter;
+    const matchSearch = m.name.toLowerCase().includes(search) ||
+      (m.supplier||'').toLowerCase().includes(search) ||
+      m.category.toLowerCase().includes(search);
+    return matchCat && matchSearch;
+  });
+  filtered.sort((a,b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (sortCol === 'stock' || sortCol === 'price') { va=parseFloat(va)||0; vb=parseFloat(vb)||0; }
+    else if (sortCol === 'expiry_date') { va=new Date(va); vb=new Date(vb); }
+    else { va=(va||'').toString().toLowerCase(); vb=(vb||'').toString().toLowerCase(); }
+    return va < vb ? -1*sortDir : va > vb ? 1*sortDir : 0;
+  });
+  return filtered;
+}
+
+// ===== RENDER ALL =====
+function renderAll() {
+  updateStats();
+  const filtered = getFiltered();
+  const empty = document.getElementById('emptyState');
+
+  if (filtered.length === 0) {
+    document.getElementById('medGrid').innerHTML = '';
+    document.getElementById('medBody').innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  renderGrid(filtered);
+  renderTable(filtered);
+}
+
+// ===== RENDER CARD GRID =====
+function renderGrid(data) {
+  const now = new Date();
+  const in30 = new Date(); in30.setDate(now.getDate()+30);
+  const in90 = new Date(); in90.setDate(now.getDate()+90);
+
+  document.getElementById('medGrid').innerHTML = data.map(m => {
+    const cc = catConfig[m.category] || catConfig['Tablet'];
+    const exp = new Date(m.expiry_date);
+    let stockClass = m.stock >= 50 ? 'stock-high' : m.stock >= 10 ? 'stock-med' : 'stock-low';
+    let restockTag = m.stock < 10 ? '<span class="restock-tag">⚠ Restock!</span>' : '';
+    let expiryClass = exp < now ? 'expiry-expired' : exp <= in30 ? 'expiry-danger' : exp <= in90 ? 'expiry-warn' : 'expiry-ok';
+    const catLow = m.category.toLowerCase();
+
+    return `<div class="med-card">
+      <div class="med-card-top">
+        <div class="med-card-img" style="background:${cc.bg};">
+          <img src="${cc.img}" alt="${m.category}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none';this.parentElement.textContent='${cc.icon}'" />
+        </div>
+        <div class="med-card-info">
+          <div class="med-card-name" title="${esc(m.name)}">#${m.id} - ${esc(m.name)}</div>
+          <div class="med-card-supplier">${esc(m.supplier||'Unknown')}</div>
+          <div class="med-card-cat"><span class="badge badge-${catLow}">${m.category}</span></div>
+        </div>
+      </div>
+      <div class="med-card-details">
+        <div class="med-detail">
+          <span class="med-detail-label">Stock</span>
+          <span class="med-detail-value ${stockClass}">${m.stock} units${restockTag}</span>
+        </div>
+        <div class="med-detail">
+          <span class="med-detail-label">Price</span>
+          <span class="med-detail-value">₹${parseFloat(m.price).toFixed(2)}</span>
+        </div>
+        <div class="med-detail">
+          <span class="med-detail-label">Expiry</span>
+          <span class="med-detail-value ${expiryClass}">${formatDate(m.expiry_date)}</span>
+        </div>
+        <div class="med-detail">
+          <span class="med-detail-label">Value</span>
+          <span class="med-detail-value">₹${(m.stock * parseFloat(m.price)).toLocaleString('en-IN')}</span>
+        </div>
+      </div>
+      <div class="med-card-actions">
+        <button class="btn btn-sm btn-primary" onclick="editMedicine(${m.id})">✏️ Edit</button>
+        <button class="btn btn-sm btn-warn" onclick="openPrescribe(${m.id})">💉 Prescribe</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteMedicine(${m.id})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== RENDER TABLE =====
+function renderTable(data) {
+  const now = new Date();
+  const in30 = new Date(); in30.setDate(now.getDate()+30);
+  const in90 = new Date(); in90.setDate(now.getDate()+90);
+
+  document.getElementById('medBody').innerHTML = data.map(m => {
+    const cc = catConfig[m.category] || catConfig['Tablet'];
+    const exp = new Date(m.expiry_date);
+    const catLow = m.category.toLowerCase();
+    let stockClass = m.stock >= 50 ? 'stock-high' : m.stock >= 10 ? 'stock-med' : 'stock-low';
+    let restockTag = m.stock < 10 ? '<span class="restock-tag">⚠ Restock!</span>' : '';
+    let expiryClass = exp < now ? 'expiry-expired' : exp <= in30 ? 'expiry-danger' : exp <= in90 ? 'expiry-warn' : 'expiry-ok';
+
+    return `<tr>
+      <td>#${m.id}</td>
+      <td><div class="td-med"><div class="td-med-img" style="background:${cc.bg};">${cc.icon}</div><strong>${esc(m.name)}</strong></div></td>
+      <td><span class="badge badge-${catLow}">${m.category}</span></td>
+      <td><span class="${stockClass}">${m.stock}</span>${restockTag}</td>
+      <td><span class="${expiryClass}">${formatDate(m.expiry_date)}</span></td>
+      <td>₹${parseFloat(m.price).toFixed(2)}</td>
+      <td style="color:#94a3b8;">${esc(m.supplier||'–')}</td>
+      <td><div class="actions-cell">
+        <button class="btn btn-sm btn-primary" onclick="editMedicine(${m.id})">✏️</button>
+        <button class="btn btn-sm btn-warn" onclick="openPrescribe(${m.id})">💉</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteMedicine(${m.id})">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ===== VIEW TOGGLE =====
+function setView(v) {
+  currentView = v;
+  document.getElementById('vGrid').classList.toggle('active', v==='grid');
+  document.getElementById('vTable').classList.toggle('active', v==='table');
+  document.getElementById('medGrid').style.display = v==='grid' ? 'grid' : 'none';
+  document.getElementById('medTable').classList.toggle('show', v==='table');
+}
+
+// ===== SORT =====
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+  renderAll();
+}
+
+// ===== FILTER =====
+function setFilter(el) {
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = el.dataset.cat;
+  renderAll();
+}
+
+// ===== ADD/EDIT MODAL =====
+function openMedModal(id) {
+  document.getElementById('medForm').reset();
+  document.getElementById('medEditId').value = '';
+  document.getElementById('medModalTitle').textContent = 'Add Medicine';
+  if (id) {
+    const m = medicines.find(x => x.id === id);
+    if (!m) return;
+    document.getElementById('medModalTitle').textContent = 'Edit Medicine';
+    document.getElementById('medEditId').value = m.id;
+    document.getElementById('medName').value = m.name;
+    document.getElementById('medCategory').value = m.category;
+    document.getElementById('medStock').value = m.stock;
+    document.getElementById('medExpiry').value = m.expiry_date;
+    document.getElementById('medPrice').value = m.price;
+    document.getElementById('medSupplier').value = m.supplier || '';
+  }
+  document.getElementById('medModal').classList.add('show');
+}
+function closeMedModal() { document.getElementById('medModal').classList.remove('show'); }
+function editMedicine(id) { openMedModal(id); }
+
+function saveMedicine(e) {
+  e.preventDefault();
+  const editId = document.getElementById('medEditId').value;
+  const data = {
+    name: document.getElementById('medName').value.trim(),
+    category: document.getElementById('medCategory').value,
+    stock: parseInt(document.getElementById('medStock').value) || 0,
+    expiry_date: document.getElementById('medExpiry').value,
+    price: parseFloat(document.getElementById('medPrice').value) || 0,
+    supplier: document.getElementById('medSupplier').value.trim(),
+  };
+
+  if (editId) {
+    const idx = medicines.findIndex(m => m.id == editId);
+    if (idx >= 0) { medicines[idx] = { ...medicines[idx], ...data }; }
+    syncWithBackend('PUT', `/medicines/${editId}`, data);
+    showToast('✅ Medicine updated!', 'success');
+  } else {
+    data.id = nextId++;
+    medicines.push(data);
+    syncWithBackend('POST', '/medicines', data);
+    showToast('✅ Medicine added!', 'success');
+  }
+  saveToStorage();
+  closeMedModal();
+  renderAll();
+}
+
+// ===== DELETE =====
+function deleteMedicine(id) {
+  const m = medicines.find(x => x.id === id);
+  if (!confirm(`Delete "${m?.name}"? This cannot be undone.`)) return;
+  medicines = medicines.filter(x => x.id !== id);
+  saveToStorage();
+  syncWithBackend('DELETE', `/medicines/${id}`);
+  showToast('🗑️ Medicine deleted', 'success');
+  renderAll();
+}
+
+// ===== PRESCRIBE =====
+function openPrescribe(medId) {
+  const m = medicines.find(x => x.id === medId);
+  if (!m) return;
+  document.getElementById('prescMedId').value = m.id;
+  document.getElementById('prescMedName').textContent = m.name + ' (' + m.category + ')';
+  document.getElementById('prescMedStock').textContent = m.stock + ' units available';
+  document.getElementById('prescQty').value = 1;
+  document.getElementById('prescQty').max = m.stock;
+  document.getElementById('prescNotes').value = '';
+  
+  // Load Patients
+  fetch('http://localhost:5000/api/patients')
+    .then(res => res.json())
+    .then(data => {
+      const pSelect = document.getElementById('prescPatient');
+      pSelect.innerHTML = '<option value="">-- Select Patient --</option>';
+      data.forEach(p => {
+        pSelect.innerHTML += `<option value="${p.id}">${p.name} (ID: ${p.id_number})</option>`;
+      });
+    })
+    .catch(err => console.error(err));
+
+  document.getElementById('prescribeModal').classList.add('show');
+}
+function closePrescribeModal() { document.getElementById('prescribeModal').classList.remove('show'); }
+
+function submitPrescription(e) {
+  e.preventDefault();
+  const medId = parseInt(document.getElementById('prescMedId').value);
+  const qty = parseInt(document.getElementById('prescQty').value);
+  const patientId = document.getElementById('prescPatient').value;
+  const m = medicines.find(x => x.id === medId);
+
+  if (!m) return showToast('Medicine not found', 'error');
+  if (!patientId) return showToast('Please select a patient', 'error');
+  if (qty > m.stock) return showToast(`Not enough stock! Only ${m.stock} left.`, 'error');
+
+  const notes = document.getElementById('prescNotes').value;
+
+  fetch('http://localhost:5000/api/prescriptions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      patient_id: patientId,
+      medicine_name: m.name,
+      quantity: qty,
+      notes: notes
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if(data.error) throw new Error(data.error);
+    m.stock -= qty;
+    saveToStorage();
+    closePrescribeModal();
+    showToast(`✅ Prescribed ${qty} units. Stock deducted.`, 'success');
+    renderAll();
+  })
+  .catch(err => {
+    console.error(err);
+    showToast('Failed to save prescription: ' + err.message, 'error');
+  });
+  renderAll();
+}
+
+// ===== EXPORT CSV =====
+function exportCSV() {
+  if (!medicines.length) return showToast('No data to export', 'error');
+  let csv = 'Name,Category,Stock,Expiry Date,Price (₹),Supplier\n';
+  medicines.forEach(m => {
+    csv += `"${m.name}",${m.category},${m.stock},${m.expiry_date},${m.price},"${m.supplier||''}"\n`;
+  });
+  const blob = new Blob([csv], { type:'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'medicines_export.csv';
+  a.click();
+  showToast('📥 CSV downloaded!', 'success');
+}
+
+// ===== HELPERS =====
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function formatDate(d){if(!d)return'–';const dt=new Date(d);return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function showToast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast toast-'+type;t.style.display='block';setTimeout(()=>{t.style.display='none';},3500);}
+
+// Close modals
+document.getElementById('medModal').addEventListener('click',e=>{if(e.target.id==='medModal')closeMedModal();});
+document.getElementById('prescribeModal').addEventListener('click',e=>{if(e.target.id==='prescribeModal')closePrescribeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMedModal();closePrescribeModal();}});
+</script>
+</body>
+</html>

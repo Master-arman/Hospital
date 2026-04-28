@@ -1,0 +1,473 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Ambulances</title>
+    <meta charset="utf-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f9fbff;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #0d6efd;
+        padding-bottom: 12px;
+      }
+      .header h2 {
+        color: #0d6efd;
+      }
+      .add-btn {
+        background: #0d6efd;
+        color: #fff;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+      }
+      th {
+        background: #0d6efd;
+        color: #fff;
+        text-align: left;
+        padding: 12px;
+      }
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #eee;
+      }
+      .action-btns {
+        display: flex;
+        gap: 8px;
+      }
+      .edit-btn {
+        background: #198754;
+        color: #fff;
+        border: none;
+        padding: 6px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .delete-btn {
+        background: #dc3545;
+        color: #fff;
+        border: none;
+        padding: 6px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1000;
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-content {
+        background: #fff;
+        padding: 28px;
+        border-radius: 8px;
+        width: 95%;
+        max-width: 640px;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        border-bottom: 2px solid #0d6efd;
+        padding-bottom: 8px;
+      }
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+      }
+      .form-group {
+        margin-bottom: 12px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+      }
+      .form-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .submit-btn {
+        background: #0d6efd;
+        color: #fff;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .cancel-btn {
+        background: #6c757d;
+        color: #fff;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .empty-msg {
+        text-align: center;
+        color: #666;
+        padding: 30px;
+      }
+      .success-msg,
+      .error-msg {
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 12px;
+        display: none;
+      }
+      .success-msg {
+        background: #e9f7ef;
+        color: #19692a;
+      }
+      .error-msg {
+        background: #fff1f0;
+        color: #8a1f1f;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>🚑 Ambulances</h2>
+        <button id="addBtn" class="add-btn">+ Add Ambulance</button>
+      </div>
+
+      <div id="successMsg" class="success-msg"></div>
+      <div id="errorMsg" class="error-msg"></div>
+
+      <div id="loadingMsg" style="display: none; padding: 12px; color: #555">
+        Loading ambulances...
+      </div>
+
+      <table id="ambulanceTable">
+        <thead>
+          <tr>
+            <th>Ambulance ID</th>
+            <th>Vehicle No.</th>
+            <th>Driver</th>
+            <th>Phone</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Location</th>
+            <th>Oxygen</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+
+      <div id="emptyMsg" class="empty-msg" style="display: none">
+        No ambulances yet. Click "+ Add Ambulance" to register one.
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="ambulanceModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modalTitle">Add New Ambulance</h3>
+          <button class="close-btn" id="closeModal">&times;</button>
+        </div>
+
+        <form id="ambulanceForm">
+          <div class="form-group">
+            <label for="ambId">Ambulance ID</label>
+            <input type="text" id="ambId" placeholder="Optional - leave empty for auto ID" />
+          </div>
+
+          <div class="form-group">
+            <label for="vehicleNumber">Vehicle Number *</label>
+            <input type="text" id="vehicleNumber" placeholder="e.g., MH12AB1234" required />
+          </div>
+
+          <div class="form-group">
+            <label for="driverName">Driver Name</label>
+            <input type="text" id="driverName" placeholder="Driver full name" />
+          </div>
+
+          <div class="form-group">
+            <label for="driverPhone">Driver Phone</label>
+            <input type="tel" id="driverPhone" placeholder="Phone number" />
+          </div>
+
+          <div class="form-group">
+            <label for="type">Type *</label>
+            <select id="type" required>
+              <option value="">Select Type</option>
+              <option value="Basic">Basic</option>
+              <option value="ICU">ICU</option>
+              <option value="Ventilator">Ventilator</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="status">Status *</label>
+            <select id="status" required>
+              <option value="">Select Status</option>
+              <option value="Available">Available</option>
+              <option value="On Duty">On Duty</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="location">Current Location</label>
+            <input type="text" id="location" placeholder="e.g., Near Main Gate" />
+          </div>
+
+          <div class="form-group">
+            <label for="oxygen">Oxygen Available *</label>
+            <select id="oxygen" required>
+              <option value="">Select</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+
+          <div class="form-buttons">
+            <button type="submit" class="submit-btn">Save Ambulance</button>
+            <button type="button" class="cancel-btn" id="cancelBtn">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+          const API_URL = 'http://localhost:5000/api';
+          let allAmbulances = [];
+          let editingId = null;
+
+          const addBtn = document.getElementById('addBtn');
+          const modal = document.getElementById('ambulanceModal');
+          const closeModalBtn = document.getElementById('closeModal');
+          const cancelBtn = document.getElementById('cancelBtn');
+          const form = document.getElementById('ambulanceForm');
+          const tableBody = document.getElementById('tableBody');
+          const loadingMsg = document.getElementById('loadingMsg');
+          const emptyMsg = document.getElementById('emptyMsg');
+          const successMsg = document.getElementById('successMsg');
+          const errorMsg = document.getElementById('errorMsg');
+          const modalTitle = document.getElementById('modalTitle');
+
+          window.addEventListener('DOMContentLoaded', loadAmbulances);
+          addBtn.addEventListener('click', () => openModal());
+          closeModalBtn.addEventListener('click', closeModalForm);
+          cancelBtn.addEventListener('click', closeModalForm);
+          modal.addEventListener('click', (e) => { if (e.target === modal) closeModalForm(); });
+          form.addEventListener('submit', saveAmbulance);
+
+          async function loadAmbulances() {
+            loadingMsg.style.display = 'block';
+            tableBody.innerHTML = '';
+            try {
+              const res = await fetch(`${API_URL}/ambulances`);
+              if (res.status === 404) {
+                // backend endpoint not implemented yet - show friendly empty state
+                loadingMsg.style.display = 'none';
+                displayEmptyState();
+                return;
+              }
+              if (!res.ok) throw new Error('Failed to load ambulances');
+              allAmbulances = await res.json();
+              loadingMsg.style.display = 'none';
+              if (!allAmbulances.length) displayEmptyState(); else displayAmbulances(allAmbulances);
+            } catch (err) {
+              console.error('Error loading ambulances:', err);
+              loadingMsg.style.display = 'none';
+              showError('Failed to load ambulances. Make sure backend is running.');
+              displayEmptyState();
+            }
+          }
+
+          function displayAmbulances(list) {
+            emptyMsg.style.display = 'none';
+            tableBody.innerHTML = '';
+            list.forEach(a => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td>${a.ambulance_id || a.id || ''}</td>
+                <td>${a.vehicle_number || ''}</td>
+                <td>${a.driver_name || ''}</td>
+                <td>${a.driver_phone || ''}</td>
+                <td>${a.type || ''}</td>
+                <td>${a.status || ''}</td>
+                <td>${a.location || ''}</td>
+                <td>${a.oxygen_available ? 'Yes' : 'No'}</td>
+                <td>
+                  <div class="action-btns">
+                    <button class="edit-btn" onclick="editAmbulance(${a.id || a.ambulance_id || 'null'})">Edit</button>
+                    <button class="delete-btn" onclick="deleteAmbulance(${a.id || a.ambulance_id || 'null'})">Delete</button>
+                  </div>
+                </td>
+              `;
+              tableBody.appendChild(tr);
+            });
+          }
+
+          function displayEmptyState() {
+            tableBody.innerHTML = '';
+            emptyMsg.style.display = 'block';
+          }
+
+          function openModal(id = null) {
+            editingId = id;
+            if (id) {
+              modalTitle.textContent = 'Edit Ambulance';
+              const amb = allAmbulances.find(x => (x.id === id || x.ambulance_id === id));
+              if (amb) {
+                document.getElementById('ambId').value = amb.ambulance_id || amb.id || '';
+                document.getElementById('vehicleNumber').value = amb.vehicle_number || '';
+                document.getElementById('driverName').value = amb.driver_name || '';
+                document.getElementById('driverPhone').value = amb.driver_phone || '';
+                document.getElementById('type').value = amb.type || '';
+                document.getElementById('status').value = amb.status || '';
+                document.getElementById('location').value = amb.location || '';
+                document.getElementById('oxygen').value = amb.oxygen_available ? 'Yes' : 'No';
+              }
+            } else {
+              modalTitle.textContent = 'Add New Ambulance';
+              form.reset();
+            }
+            modal.classList.add('active');
+          }
+
+          function closeModalForm() {
+            modal.classList.remove('active');
+            form.reset();
+            editingId = null;
+          }
+
+          async function saveAmbulance(e) {
+            e.preventDefault();
+            const ambulance_id = document.getElementById('ambId').value.trim();
+            const vehicle_number = document.getElementById('vehicleNumber').value.trim();
+            const driver_name = document.getElementById('driverName').value.trim();
+            const driver_phone = document.getElementById('driverPhone').value.trim();
+            const type = document.getElementById('type').value;
+            const status = document.getElementById('status').value;
+            const location = document.getElementById('location').value.trim();
+            const oxygen_available = document.getElementById('oxygen').value === 'Yes' ? 1 : 0;
+
+            if (!vehicle_number || !type || !status || document.getElementById('oxygen').value === '') {
+              showError('Please fill required fields (Vehicle No., Type, Status, Oxygen).');
+              return;
+            }
+
+           const payload = {
+              ambulance_id: ambulance_id || null,
+              vehicle_number,
+              driver_name: driver_name || null,
+              driver_phone: driver_phone || null,
+              type,
+              status,
+              location: location || null,
+              oxygen_available
+            };
+
+            try {
+              const method = editingId ? 'PUT' : 'POST';
+              const endpoint = editingId ? `/ambulances/${editingId}` : '/ambulances';
+              const res = await fetch(`${API_URL}${endpoint}`, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+
+           if (res.status === 404) {
+                // endpoint not implemented yet - show success locally and reload empty state
+                showSuccess('✅ Form submitted. Implement backend endpoint /ambulances to persist data.');
+                closeModalForm();
+                loadAmbulances();
+                return;
+              }
+
+              if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || 'Failed to save ambulance');
+              }
+
+              showSuccess(editingId ? '✅ Ambulance updated!' : '✅ Ambulance registered!');
+              closeModalForm();
+              loadAmbulances();
+            } catch (err) {
+              console.error('Save ambulance error:', err);
+              showError('Failed to save ambulance: ' + err.message);
+            }
+          }
+
+          function editAmbulance(id) { openModal(id); }
+
+          async function deleteAmbulance(id) {
+            if (!confirm('Are you sure you want to delete this ambulance?')) return;
+            try {
+              const res = await fetch(`${API_URL}/ambulances/${id}`, { method: 'DELETE' });
+              if (res.status === 404) { showError('Endpoint /ambulances not implemented.'); return; }
+              if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Failed to delete'); }
+              showSuccess('✅ Ambulance deleted');
+              loadAmbulances();
+            } catch (err) { console.error('Delete error:', err); showError('Failed to delete: ' + err.message); }
+          }
+
+          function showSuccess(msg) {
+            successMsg.textContent = msg; successMsg.style.display = 'block'; errorMsg.style.display = 'none';
+            setTimeout(() => { successMsg.style.display = 'none'; }, 4000);
+          }
+
+          function showError(msg) {
+            errorMsg.textContent = msg; errorMsg.style.display = 'block'; successMsg.style.display = 'none';
+            setTimeout(() => { errorMsg.style.display = 'none'; }, 5000);
+          }
+
+          // Expose functions for inline onclick handlers
+          window.editAmbulance = editAmbulance;
+          window.deleteAmbulance = deleteAmbulance;
+    </script>
+  </body>
+</html>
