@@ -241,6 +241,41 @@ app.get("/api/rooms", async (req, res) => {
   }
 });
 
+app.post("/api/rooms", async (req, res) => {
+  try {
+    const { room_number, department_id, capacity, status } = req.body;
+    const [result] = await pool.query(
+      `INSERT INTO rooms(room_number, department_id, capacity, status) VALUES(?,?,?,?)`,
+      [room_number, department_id, capacity, status]
+    );
+    res.json({ message: "✅ Room added", id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put("/api/rooms/:id", async (req, res) => {
+  try {
+    const { room_number, department_id, capacity, status } = req.body;
+    await pool.query(
+      `UPDATE rooms SET room_number=?, department_id=?, capacity=?, status=? WHERE id=?`,
+      [room_number, department_id, capacity, status, req.params.id]
+    );
+    res.json({ message: "✅ Room updated" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete("/api/rooms/:id", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM rooms WHERE id=?", [req.params.id]);
+    res.json({ message: "✅ Room deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ======================================================
 // ================= EMPLOYEES API =======================
 // ======================================================
