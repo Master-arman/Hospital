@@ -28,7 +28,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // Serve Static Frontend files from Express
-app.use(express.static(path.join(__dirname, "../app/hospital-app/Home page")));
+app.use(express.static(path.join(__dirname, "../app/hospital-app/home-page")));
 app.use('/uploads', express.static(uploadsDir));
 
 // ================= DATABASE CONNECTION (MySQL) =================

@@ -6,26 +6,26 @@
       "use": "@vercel/node"
     },
     {
-      "src": "app/hospital-app/Home page/**",
+      "src": "app/hospital-app/home-page/**",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "backend/index.js"
+      "dest": "/backend/index.js"
     },
     {
       "src": "/uploads/(.*)",
-      "dest": "backend/index.js"
+      "dest": "/backend/index.js"
     },
     {
       "src": "/",
-      "dest": "app/hospital-app/Home page/home.html"
+      "dest": "/app/hospital-app/home-page/home.html"
     },
     {
       "src": "/(.*)",
-      "dest": "app/hospital-app/Home page/$1"
+      "dest": "/app/hospital-app/home-page/$1"
     }
   ]
 }
