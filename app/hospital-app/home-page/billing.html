@@ -650,7 +650,7 @@
           status: status
         };
 
-        fetch('http://localhost:5000/api/billing', {
+        fetch('/api/billing', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newTx)
@@ -671,7 +671,7 @@
       }
 
       function loadTransactions() {
-        fetch('http://localhost:5000/api/billing')
+        fetch('/api/billing')
           .then(res => res.json())
           .then(data => {
             transactions = data;

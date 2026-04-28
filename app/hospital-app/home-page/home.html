@@ -1858,7 +1858,7 @@
 
       async function searchPatients(q) {
         try {
-          const res = await fetch(`http://localhost:5000/api/patients/search?q=${encodeURIComponent(q)}`);
+          const res = await fetch(`/api/patients/search?q=${encodeURIComponent(q)}`);
           const patients = await res.json();
           if (patients.length === 0) {
             searchResultsDiv.innerHTML = '<div class="search-no-result">No patients found for "' + q + '"</div>';
@@ -1895,7 +1895,7 @@
 
       async function loadNotifications() {
         try {
-          const res = await fetch('http://localhost:5000/api/medicines/alerts/all');
+          const res = await fetch('/api/medicines/alerts/all');
           const data = await res.json();
           const items = [];
 

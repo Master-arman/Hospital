@@ -533,7 +533,7 @@ async function syncWithBackend(method, endpoint, data) {
   try {
     const opts = { method, headers:{'Content-Type':'application/json'} };
     if (data) opts.body = JSON.stringify(data);
-    await fetch(`http://localhost:5000/api${endpoint}`, opts);
+    await fetch(`/api${endpoint}`, opts);
   } catch(e) { /* backend not available, localStorage is primary */ }
 }
 
@@ -769,7 +769,7 @@ function openPrescribe(medId) {
   document.getElementById('prescNotes').value = '';
   
   // Load Patients
-  fetch('http://localhost:5000/api/patients')
+  fetch('/api/patients')
     .then(res => res.json())
     .then(data => {
       const pSelect = document.getElementById('prescPatient');
@@ -797,7 +797,7 @@ function submitPrescription(e) {
 
   const notes = document.getElementById('prescNotes').value;
 
-  fetch('http://localhost:5000/api/prescriptions', {
+  fetch('/api/prescriptions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
