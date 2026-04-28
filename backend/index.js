@@ -7,6 +7,9 @@ import cron from "node-cron";
 import nodemailer from "nodemailer";
 import multer from "multer";
 import fs from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,11 +37,11 @@ app.use('/uploads', express.static(uploadsDir));
 // ================= DATABASE CONNECTION (MySQL) =================
 
 const pool = mysql.createPool({
-  host: "127.0.0.1",
-  port: 3306,
-  user: "root",
-  password: "123456789",
-  database: "arman",
+  host: process.env.DB_HOST || "127.0.0.1",
+  port: process.env.DB_PORT || 3306,
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "123456789",
+  database: process.env.DB_NAME || "arman",
   connectionLimit: 10,
   waitForConnections: true,
 });
