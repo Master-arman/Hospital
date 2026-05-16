@@ -315,6 +315,42 @@ app.get("/api/ambulances", async (req, res) => {
   }
 });
 
+app.post("/api/ambulances", async (req, res) => {
+  try {
+    const { ambulance_id, vehicle_number, driver_name, driver_phone, type, status, location, oxygen_available } = req.body;
+    if (!vehicle_number || !type || !status) return res.status(400).json({ error: "Required fields missing" });
+    const [result] = await pool.query(
+      `INSERT INTO ambulances (ambulance_id, vehicle_number, driver_name, driver_phone, type, status, location, oxygen_available) VALUES (?,?,?,?,?,?,?,?)`,
+      [ambulance_id, vehicle_number, driver_name, driver_phone, type, status, location, oxygen_available]
+    );
+    res.json({ message: "✅ Ambulance added successfully", id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put("/api/ambulances/:id", async (req, res) => {
+  try {
+    const { ambulance_id, vehicle_number, driver_name, driver_phone, type, status, location, oxygen_available } = req.body;
+    await pool.query(
+      `UPDATE ambulances SET ambulance_id=?, vehicle_number=?, driver_name=?, driver_phone=?, type=?, status=?, location=?, oxygen_available=? WHERE id=? OR ambulance_id=?`,
+      [ambulance_id, vehicle_number, driver_name, driver_phone, type, status, location, oxygen_available, req.params.id, req.params.id]
+    );
+    res.json({ message: "✅ Ambulance updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete("/api/ambulances/:id", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM ambulances WHERE id=? OR ambulance_id=?", [req.params.id, req.params.id]);
+    res.json({ message: "✅ Ambulance deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ======================================================
 // ================= MEDICINES API =======================
 // ======================================================
